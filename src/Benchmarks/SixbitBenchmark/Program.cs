@@ -6,14 +6,15 @@ using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using KbinXml.Net.Utils;
 
-//BenchmarkRunner.Run<EncodeTask>();
-BenchmarkRunner.Run<DecodeTask>();
+BenchmarkRunner.Run<EncodeTask>();
+//BenchmarkRunner.Run<DecodeTask>();
 
 [MemoryDiagnoser]
 
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net48)]
+[SimpleJob(RuntimeMoniker.Net80)]
+[SimpleJob(RuntimeMoniker.Net90)]
 public class EncodeTask
 {
     private const int Length = 1024 * 1024;
@@ -30,13 +31,13 @@ public class EncodeTask
         _pool = ArrayPool<byte>.Shared.Rent(Length * 6 / 8);
     }
 
-    [Benchmark]
-    public object? EncodeFillOutput_Original()
-    {
-        Span<byte> output = _pool.AsSpan(0, Length * 6 / 8);
-        SixbitHelperOriginal.EncodeFillOutput(_testData, ref output);
-        return _pool;
-    }
+    //[Benchmark]
+    //public object? EncodeFillOutput_Original()
+    //{
+    //    Span<byte> output = _pool.AsSpan(0, Length * 6 / 8);
+    //    SixbitHelperOriginal.EncodeFillOutput(_testData, ref output);
+    //    return _pool;
+    //}
 
     [Benchmark(Baseline = true)]
     public object? EncodeFillOutput_DeepseekAlgorithmOptimized()
@@ -46,11 +47,11 @@ public class EncodeTask
         return _pool;
     }
 
-    [Benchmark(Baseline = true)]
-    public object? EncodeFillOutput_DeepseekAlgorithmOptimizedDangerous()
+    [Benchmark]
+    public object? EncodeFillOutput_DeepseekAlgorithmSuperOptimized()
     {
         Span<byte> output = _pool.AsSpan(0, Length * 6 / 8);
-        SixbitHelperReleaseOptimized.Encode(_testData, output);
+        SixbitHelperSuperOptimized.Encode(_testData, output);
         return _pool;
     }
 }
@@ -80,13 +81,13 @@ public class DecodeTask
         _pool = ArrayPool<byte>.Shared.Rent(output.Length * 8 / 6);
     }
 
-    [Benchmark]
-    public object? DecodeFillOutput_Original()
-    {
-        Span<byte> output = _pool.AsSpan(0, _testData.Length * 6 / 8);
-        SixbitHelperOriginal.DecodeFillInput(_testData, ref output);
-        return _pool;
-    }
+    //[Benchmark]
+    //public object? DecodeFillOutput_Original()
+    //{
+    //    Span<byte> output = _pool.AsSpan(0, _testData.Length * 6 / 8);
+    //    SixbitHelperOriginal.DecodeFillInput(_testData, ref output);
+    //    return _pool;
+    //}
 
     //[Benchmark]
     //public object? DecodeFillOutput_DeepseekOptimized()
@@ -105,10 +106,10 @@ public class DecodeTask
     }
 
     [Benchmark]
-    public object? DecodeFillOutput_DeepseekAlgorithmOptimizedDangerous()
+    public object? DecodeFillOutput_DeepseekAlgorithmSuperOptimized()
     {
         Span<byte> output = _pool.AsSpan(0, _testData.Length * 6 / 8);
-        SixbitHelperReleaseOptimized.Decode(_testData, output);
+        SixbitHelperSuperOptimized.Decode(_testData, output);
         return _pool;
     }
 }

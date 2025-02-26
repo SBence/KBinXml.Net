@@ -10,11 +10,12 @@ namespace GeneralUnitTests
         [Fact]
         public void VerifyBitEquivalence()
         {
-            //var total = 1024 * 1024;
-
-            //Random rnd = new();
-            byte[] testData = new byte[] { 0x12, 0x34, 0x56, 0x78 };
-            //rnd.NextBytes(testData);
+            //byte[] testData = new byte[] { 0x12, 0x34, 0x56, 0x78 };
+            
+            var total = 1024 * 1024;
+            Random rnd = new();
+            byte[] testData = new byte[total];
+            rnd.NextBytes(testData);
 
             Span<byte> outputOriginal = new byte[testData.Length * 6 / 8];
             //Span<byte> outputOptimize = new byte[testData.Length * 6 / 8];
@@ -25,7 +26,8 @@ namespace GeneralUnitTests
             SixbitHelperOriginal.EncodeFillOutput(testData, ref outputOriginal);
             //SixbitHelper.EncodeFillOutput_Optimized(testData, ref outputOptimize);
             SixbitHelperOptimized.Encode(testData, outputOptimizeFinal);
-            SixbitHelperReleaseOptimized.Encode(testData, outputOptimizeFinal2);
+            //SixBitOptimized2.Encode(testData, outputOptimizeFinal2);
+            SixbitHelperSuperOptimized.Encode(testData, outputOptimizeFinal2);
 
             // 逐位比较
             for (int i = 0; i < outputOptimizeFinal.Length; i++)
@@ -46,11 +48,13 @@ namespace GeneralUnitTests
         [Fact]
         public void VerifyBitEquivalence2()
         {
-            //var total = 1024 * 1024;
+            //byte[] testData = new byte[] { 0x12, 0x34, 0x56, 0x78 };
+            
+            var total = 1024 * 1024;
+            Random rnd = new();
+            byte[] testData = new byte[total];
+            rnd.NextBytes(testData);
 
-            //Random rnd = new();
-            byte[] testData = new byte[] { 0x12, 0x34, 0x56, 0x78 };
-            //rnd.NextBytes(testData);
             Span<byte> output = new byte[testData.Length * 6 / 8];
             SixbitHelperOriginal.EncodeFillOutput(testData, ref output);
 
@@ -63,7 +67,8 @@ namespace GeneralUnitTests
             SixbitHelperOriginal.DecodeFillInput(output, ref inputOriginal);
             //SixbitHelper.DecodeFillInput_Optimized(output, ref inputOptimize);
             SixbitHelperOptimized.Decode(output, inputOptimizeFinal);
-            SixbitHelperReleaseOptimized.Decode(output, inputOptimizeFinal2);
+            //SixBitOptimized2.Decode(output, inputOptimizeFinal2);
+            SixbitHelperSuperOptimized.Decode(output, inputOptimizeFinal2);
 
             // 逐位比较
             for (int i = 0; i < inputOptimizeFinal.Length; i++)
