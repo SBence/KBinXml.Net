@@ -18,30 +18,29 @@ namespace GeneralUnitTests
             rnd.NextBytes(testData);
 
             Span<byte> outputOriginal = new byte[testData.Length * 6 / 8];
-            //Span<byte> outputOptimize = new byte[testData.Length * 6 / 8];
-            Span<byte> outputOptimizeFinal = new byte[testData.Length * 6 / 8];
-            Span<byte> outputOptimizeFinal2 = new byte[testData.Length * 6 / 8];
+            Span<byte> outputOptimize = new byte[testData.Length * 6 / 8];
+            Span<byte> outputSuperOptimize = new byte[testData.Length * 6 / 8];
+            Span<byte> outputSuperOptimize2 = new byte[testData.Length * 6 / 8];
 
             // 执行两个版本
             SixbitHelperOriginal.EncodeFillOutput(testData, ref outputOriginal);
-            //SixbitHelper.EncodeFillOutput_Optimized(testData, ref outputOptimize);
-            SixbitHelperOptimized.Encode(testData, outputOptimizeFinal);
-            //SixBitOptimized2.Encode(testData, outputOptimizeFinal2);
-            SixbitHelperSuperOptimized.Encode(testData, outputOptimizeFinal2);
+            SixbitHelperOptimized.Encode(testData, outputOptimize);
+            SixbitHelperSuperOptimized.Encode(testData, outputSuperOptimize);
+            SixbitHelperCoreClrOptimized.Encode(testData, outputSuperOptimize2);
 
             // 逐位比较
-            for (int i = 0; i < outputOptimizeFinal.Length; i++)
+            for (int i = 0; i < outputSuperOptimize.Length; i++)
             {
                 int originalBit = outputOriginal[i];
-                //int optimizeBit = outputOptimize[i];
-                int optimizeFinalBit = outputOptimizeFinal[i];
-                int optimizeFinal2Bit = outputOptimizeFinal2[i];
-                //Debug.Assert(originalBit == optimizeBit,
-                //    $"Bit mismatch at position {i}: Original={originalBit}, Optimize={optimizeBit}");
-                Debug.Assert(originalBit == optimizeFinalBit,
-                    $"Bit mismatch at position {i}: Original={originalBit}, OptimizeFinal={optimizeFinalBit}");
-                Debug.Assert(optimizeFinalBit == optimizeFinal2Bit,
-                    $"Bit mismatch at position {i}: Original={optimizeFinalBit}, OptimizeFinal2={optimizeFinal2Bit}");
+                int optimizeBit = outputOptimize[i];
+                int superOptimizeBit = outputSuperOptimize[i];
+                int superOptimize2Bit = outputSuperOptimize2[i];
+                Debug.Assert(originalBit == optimizeBit,
+                    $"Bit mismatch at position {i}: Original={originalBit}, Optimize={optimizeBit}");
+                Debug.Assert(originalBit == superOptimizeBit,
+                    $"Bit mismatch at position {i}: Original={originalBit}, SuperOptimize={superOptimizeBit}");
+                Debug.Assert(superOptimizeBit == superOptimize2Bit,
+                    $"Bit mismatch at position {i}: Original={superOptimizeBit}, OptimizeFinal2={superOptimize2Bit}");
             }
         }
 
@@ -59,30 +58,29 @@ namespace GeneralUnitTests
             SixbitHelperOriginal.EncodeFillOutput(testData, ref output);
 
             Span<byte> inputOriginal = new byte[output.Length * 8 / 6];
-            //Span<byte> inputOptimize = new byte[output.Length * 8 / 6];
-            Span<byte> inputOptimizeFinal = new byte[output.Length * 8 / 6];
-            Span<byte> inputOptimizeFinal2 = new byte[output.Length * 8 / 6];
+            Span<byte> inputOptimize = new byte[output.Length * 8 / 6];
+            Span<byte> inputSuperOptimize = new byte[output.Length * 8 / 6];
+            Span<byte> inputSuperOptimize2 = new byte[output.Length * 8 / 6];
 
             // 执行两个版本
             SixbitHelperOriginal.DecodeFillInput(output, ref inputOriginal);
-            //SixbitHelper.DecodeFillInput_Optimized(output, ref inputOptimize);
-            SixbitHelperOptimized.Decode(output, inputOptimizeFinal);
-            //SixBitOptimized2.Decode(output, inputOptimizeFinal2);
-            SixbitHelperSuperOptimized.Decode(output, inputOptimizeFinal2);
+            SixbitHelperOptimized.Decode(output, inputOptimize);
+            SixbitHelperSuperOptimized.Decode(output, inputSuperOptimize);
+            SixbitHelperCoreClrOptimized.Decode(output, inputSuperOptimize2);
 
             // 逐位比较
-            for (int i = 0; i < inputOptimizeFinal.Length; i++)
+            for (int i = 0; i < inputSuperOptimize.Length; i++)
             {
                 int originalBit = inputOriginal[i];
-                //int optimizeBit = inputOptimize[i];
-                int optimizeFinalBit = inputOptimizeFinal[i];
-                int optimizeFinal2Bit = inputOptimizeFinal2[i];
-                //Debug.Assert(originalBit == optimizeBit,
-                //    $"Bit mismatch at position {i}: Original={originalBit}, Optimize={optimizeBit}");
-                Debug.Assert(originalBit == optimizeFinalBit,
-                    $"Bit mismatch at position {i}: Original={originalBit}, OptimizeFinal={optimizeFinalBit}");
-                Debug.Assert(optimizeFinalBit == optimizeFinal2Bit,
-                    $"Bit mismatch at position {i}: Original={optimizeFinalBit}, OptimizeFinal2={optimizeFinal2Bit}");
+                int optimizeBit = inputOptimize[i];
+                int superOptimizeBit = inputSuperOptimize[i];
+                int superOptimize2Bit = inputSuperOptimize2[i];
+                Debug.Assert(originalBit == optimizeBit,
+                    $"Bit mismatch at position {i}: Original={originalBit}, Optimize={optimizeBit}");
+                Debug.Assert(originalBit == superOptimizeBit,
+                    $"Bit mismatch at position {i}: Original={originalBit}, SuperOptimize={superOptimizeBit}");
+                Debug.Assert(originalBit == superOptimize2Bit,
+                    $"Bit mismatch at position {i}: Original={originalBit}, OptimizeFinal2={superOptimize2Bit}");
             }
         }
     }

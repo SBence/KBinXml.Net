@@ -4,6 +4,17 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using KbinXml.Net.Internal;
+using KbinXml.Net.Utils;
+
+//using SixbitHelperImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
+#if NET6_0_OR_GREATER
+using SixbitHelperEncImpl = KbinXml.Net.Utils.SixbitHelperCoreClrOptimized;
+using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
+#else
+using SixbitHelperEncImpl = KbinXml.Net.Utils.SixbitHelperSuperOptimized;
+using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperSuperOptimized;
+#endif
+
 namespace KbinXml.Net.Utils;
 
 /// <summary>
@@ -20,7 +31,7 @@ public static class SixbitHelper
         for (var i = 0; i < Charset.Length; i++)
             CharsetMapping[Charset[i]] = (byte)i;
     }
-    
+
     /// <summary>
     /// Encodes a string into 6-bit encoded binary data.
     /// </summary>
@@ -33,7 +44,7 @@ public static class SixbitHelper
         EncodeCore(input, ms);
         return ms.ToArray();
     }
-    
+
     /// <summary>
     /// Encodes a string and writes the 6-bit encoded data directly to a stream.
     /// </summary>
@@ -44,7 +55,7 @@ public static class SixbitHelper
     {
         EncodeCore(input, stream);
     }
-    
+
     /// <summary>
     /// Decodes 6-bit encoded binary data back to a string.
     /// </summary>
@@ -57,13 +68,13 @@ public static class SixbitHelper
         if (length <= Constants.MaxStackLength)
         {
             Span<byte> input = stackalloc byte[length];
-            SixbitHelperOptimized.Decode(buffer, input);
+            SixbitHelperDecImpl.Decode(buffer, input);
             return GetString(input);
         }
 
         using var rentedInput = new RentedArray<byte>(ArrayPool<byte>.Shared, length);
         var inputSpan = rentedInput.Array.AsSpan(0, length);
-        SixbitHelperOptimized.Decode(buffer, inputSpan);
+        SixbitHelperDecImpl.Decode(buffer, inputSpan);
         return GetString(inputSpan);
     }
 
@@ -77,7 +88,7 @@ public static class SixbitHelper
             Span<byte> inputBuffer = stackalloc byte[inputLength];
             Span<byte> outputBuffer = stackalloc byte[outputLength];
             FillInput(input, inputBuffer);
-            SixbitHelperOptimized.Encode(inputBuffer, outputBuffer);
+            SixbitHelperEncImpl.Encode(inputBuffer, outputBuffer);
             stream.WriteSpan(outputBuffer);
         }
         else
@@ -87,7 +98,7 @@ public static class SixbitHelper
             var inputSpan = rentedInput.Array.AsSpan(0, inputLength);
             var outputSpan = rentedOutput.Array.AsSpan(0, outputLength);
             FillInput(input, inputSpan);
-            SixbitHelperOptimized.Encode(inputSpan, outputSpan);
+            SixbitHelperEncImpl.Encode(inputSpan, outputSpan);
             stream.WriteSpan(outputSpan);
         }
     }
