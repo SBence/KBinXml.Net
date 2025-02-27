@@ -1,7 +1,7 @@
 ﻿using System;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Internal.TypeConverters;
+namespace KbinXml.Net.Internal;
 
 internal interface ITypeConverter
 {

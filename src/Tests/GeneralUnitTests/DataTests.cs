@@ -1,4 +1,5 @@
 using System;
+using KbinXml.Net.Internal.TypeConverters;
 using KbinXml.Net.Utils;
 using Xunit;
 
@@ -15,9 +16,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteU8String(ref builder, str);
+                    U8Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.U8ToString(bytes));
+                }, bytes => U8Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -155,9 +156,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteIp4String(ref builder, str);
+                    Ip4Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.Ip4ToString(bytes));
+                }, bytes => Ip4Converter.Instance.ToString(bytes));
         }
 
         private static void DoWorks(object value,

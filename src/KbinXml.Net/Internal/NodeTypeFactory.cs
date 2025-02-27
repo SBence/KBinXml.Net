@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using KbinXml.Net.Utils;
-using static KbinXml.Net.Utils.ConvertHelper;
+using KbinXml.Net.Internal.TypeConverters;
 
+#if NET6_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
+#else
+using System.Linq;
 #endif
 
 namespace KbinXml.Net.Internal;
@@ -17,59 +19,63 @@ internal static class NodeTypeFactory
 {
     private static readonly IReadOnlyDictionary<byte, NodeType> NodesDictionary = new Dictionary<byte, NodeType>
             {
-                { 2, new NodeType(1, 1, "s8", WriteS8String, S8ToString) },
-                { 3, new NodeType(1, 1, "u8", WriteU8String, U8ToString) },
-                { 4, new NodeType(2, 1, "s16", WriteS16String, S16ToString) },
-                { 5, new NodeType(2, 1, "u16", WriteU16String, U16ToString) },
-                { 6, new NodeType(4, 1, "s32", WriteS32String, S32ToString) },
-                { 7, new NodeType(4, 1, "u32", WriteU32String, U32ToString) },
-                { 8, new NodeType(8, 1, "s64", WriteS64String, S64ToString) },
-                { 9, new NodeType(8, 1, "u64", WriteU64String, U64ToString) },
-                { 10, new NodeType(0, 0, "bin", ThrowExceptionConvert, ThrowExceptionConvert) },
-                { 11, new NodeType(0, 0, "str", ThrowExceptionConvert, ThrowExceptionConvert) },
-                { 12, new NodeType(4, 1, "ip4", WriteIp4String, Ip4ToString) },
-                { 13, new NodeType(4, 1, "time", WriteU32String, U32ToString) },
-                { 14, new NodeType(4, 1, "float", WriteSingleString, SingleToString) },
-                { 15, new NodeType(8, 1, "double", WriteDoubleString, DoubleToString) },
-                { 16, new NodeType(1, 2, "2s8", WriteS8String, S8ToString) },
-                { 17, new NodeType(1, 2, "2u8", WriteU8String, U8ToString) },
-                { 18, new NodeType(2, 2, "2s16", WriteS16String, S16ToString) },
-                { 19, new NodeType(2, 2, "2u16", WriteU16String, U16ToString) },
-                { 20, new NodeType(4, 2, "2s32", WriteS32String, S32ToString) },
-                { 21, new NodeType(4, 2, "2u32", WriteU32String, U32ToString) },
-                { 22, new NodeType(8, 2, "vs64", WriteS64String, S64ToString) },
-                { 23, new NodeType(8, 2, "vu64", WriteU64String, U64ToString) },
-                { 24, new NodeType(4, 2, "2f", WriteSingleString, SingleToString) },
-                { 25, new NodeType(8, 2, "vd", WriteDoubleString, DoubleToString) },
-                { 26, new NodeType(1, 3, "3s8", WriteS8String, S8ToString) },
-                { 27, new NodeType(1, 3, "3u8", WriteU8String, U8ToString) },
-                { 28, new NodeType(2, 3, "3s16", WriteS16String, S16ToString) },
-                { 29, new NodeType(2, 3, "3u16", WriteU16String, U16ToString) },
-                { 30, new NodeType(4, 3, "3s32", WriteS32String, S32ToString) },
-                { 31, new NodeType(4, 3, "3u32", WriteU32String, U32ToString) },
-                { 32, new NodeType(8, 3, "3s64", WriteS64String, S64ToString) },
-                { 33, new NodeType(8, 3, "3u64", WriteU64String, U64ToString) },
-                { 34, new NodeType(4, 3, "3f", WriteSingleString, SingleToString) },
-                { 35, new NodeType(8, 3, "3d", WriteDoubleString, DoubleToString) },
-                { 36, new NodeType(1, 4, "4s8", WriteS8String, S8ToString) },
-                { 37, new NodeType(1, 4, "4u8", WriteU8String, U8ToString) },
-                { 38, new NodeType(2, 4, "4s16", WriteS16String, S16ToString) },
-                { 39, new NodeType(2, 4, "4u16", WriteU16String, U16ToString) },
-                { 40, new NodeType(4, 4, "vs32", WriteS32String, S32ToString) },
-                { 41, new NodeType(4, 4, "vu32", WriteU32String, U32ToString) },
-                { 42, new NodeType(8, 4, "4s64", WriteS64String, S64ToString) },
-                { 43, new NodeType(8, 4, "4u64", WriteU64String, U64ToString) },
-                { 44, new NodeType(4, 4, "vf", WriteSingleString, SingleToString) },
-                { 45, new NodeType(8, 4, "4d", WriteDoubleString, DoubleToString) },
-                { 48, new NodeType(1, 16, "vs8", WriteS8String, S8ToString) },
-                { 49, new NodeType(1, 16, "vu8", WriteU8String, U8ToString) },
-                { 50, new NodeType(2, 8, "vs16", WriteS16String, S16ToString) },
-                { 51, new NodeType(2, 8, "vu16", WriteU16String, U16ToString) },
-                { 52, new NodeType(1, 1, "bool", WriteU8String, U8ToString) },
-                { 53, new NodeType(1, 2, "2b", WriteU8String, U8ToString) },
-                { 54, new NodeType(1, 3, "3b", WriteU8String, U8ToString) },
-                { 55, new NodeType(1, 4, "4b", WriteU8String, U8ToString) },
-                { 56, new NodeType(1, 16, "vb", WriteU8String, U8ToString) },
+                { 2, new NodeType(1, 1, "s8", S8Converter.Instance) },
+                { 3, new NodeType(1, 1, "u8", U8Converter.Instance) },
+                { 4, new NodeType(2, 1, "s16", S16Converter.Instance) },
+                { 5, new NodeType(2, 1, "u16", U16Converter.Instance) },
+                { 6, new NodeType(4, 1, "s32", S32Converter.Instance) },
+                { 7, new NodeType(4, 1, "u32", U32Converter.Instance) },
+                { 8, new NodeType(8, 1, "s64", S64Converter.Instance) },
+                { 9, new NodeType(8, 1, "u64", U64Converter.Instance) },
+                { 10, new NodeType(0, 0, "bin", BinDummyConverter.Instance) },
+                { 11, new NodeType(0, 0, "str", StrDummyConverter.Instance) },
+                { 12, new NodeType(4, 1, "ip4", Ip4Converter.Instance) },
+                { 13, new NodeType(4, 1, "time", U32Converter.Instance) },
+                { 14, new NodeType(4, 1, "float", FloatConverter.Instance) },
+                { 15, new NodeType(8, 1, "double", DoubleConverter.Instance) },
+
+                { 16, new NodeType(1, 2, "2s8", S8Converter.Instance) },
+                { 17, new NodeType(1, 2, "2u8", U8Converter.Instance) },
+                { 18, new NodeType(2, 2, "2s16", S16Converter.Instance) },
+                { 19, new NodeType(2, 2, "2u16", U16Converter.Instance) },
+                { 20, new NodeType(4, 2, "2s32", S32Converter.Instance) },
+                { 21, new NodeType(4, 2, "2u32", U32Converter.Instance) },
+                { 22, new NodeType(8, 2, "vs64", S64Converter.Instance) },
+                { 23, new NodeType(8, 2, "vu64", U64Converter.Instance) },
+                { 24, new NodeType(4, 2, "2f", FloatConverter.Instance) },
+                { 25, new NodeType(8, 2, "vd", DoubleConverter.Instance) },
+
+                { 26, new NodeType(1, 3, "3s8", S8Converter.Instance) },
+                { 27, new NodeType(1, 3, "3u8", U8Converter.Instance) },
+                { 28, new NodeType(2, 3, "3s16", S16Converter.Instance) },
+                { 29, new NodeType(2, 3, "3u16", U16Converter.Instance) },
+                { 30, new NodeType(4, 3, "3s32", S32Converter.Instance) },
+                { 31, new NodeType(4, 3, "3u32", U32Converter.Instance) },
+                { 32, new NodeType(8, 3, "3s64", S64Converter.Instance) },
+                { 33, new NodeType(8, 3, "3u64", U64Converter.Instance) },
+                { 34, new NodeType(4, 3, "3f", FloatConverter.Instance) },
+                { 35, new NodeType(8, 3, "3d", DoubleConverter.Instance) },
+
+                { 36, new NodeType(1, 4, "4s8", S8Converter.Instance) },
+                { 37, new NodeType(1, 4, "4u8", U8Converter.Instance) },
+                { 38, new NodeType(2, 4, "4s16", S16Converter.Instance) },
+                { 39, new NodeType(2, 4, "4u16", U16Converter.Instance) },
+                { 40, new NodeType(4, 4, "vs32", S32Converter.Instance) },
+                { 41, new NodeType(4, 4, "vu32", U32Converter.Instance) },
+                { 42, new NodeType(8, 4, "4s64", S64Converter.Instance) },
+                { 43, new NodeType(8, 4, "4u64", U64Converter.Instance) },
+                { 44, new NodeType(4, 4, "vf", FloatConverter.Instance) },
+                { 45, new NodeType(8, 4, "4d", DoubleConverter.Instance) },
+
+                { 48, new NodeType(1, 16, "vs8", S8Converter.Instance) },
+                { 49, new NodeType(1, 16, "vu8", U8Converter.Instance) },
+                { 50, new NodeType(2, 8, "vs16", S16Converter.Instance) },
+                { 51, new NodeType(2, 8, "vu16", U16Converter.Instance) },
+                { 52, new NodeType(1, 1, "bool", U8Converter.Instance) },
+                { 53, new NodeType(1, 2, "2b", U8Converter.Instance) },
+                { 54, new NodeType(1, 3, "3b", U8Converter.Instance) },
+                { 55, new NodeType(1, 4, "4b", U8Converter.Instance) },
+                { 56, new NodeType(1, 16, "vb", U8Converter.Instance) },
             }
 #if NET8_0_OR_GREATER
             .ToFrozenDictionary()
@@ -94,7 +100,7 @@ internal static class NodeTypeFactory
             NodesArray[nodeType.Key] = nodeType.Value;
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetNodeType(byte typeCode,
 #if NET6_0_OR_GREATER
@@ -111,6 +117,7 @@ internal static class NodeTypeFactory
         //throw new InvalidOperationException($"Unknown type code: {typeCode}");
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NodeType GetNodeType(byte typeCode)
     {
         var nodeType = NodesArray[typeCode];
@@ -126,7 +133,7 @@ internal static class NodeTypeFactory
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NodeType GetNodeType(string name)
     {
-        return NodesDictionary[GetNodeTypeId(name)];
+        return GetNodeType(GetNodeTypeId(name));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,8 +142,8 @@ internal static class NodeTypeFactory
         return ReverseTypeMap[name];
     }
 
-    private static string ThrowExceptionConvert(ReadOnlySpan<byte> c) => throw new NotSupportedException();
+    //private static string ThrowExceptionConvert(ReadOnlySpan<byte> c) => throw new NotSupportedException();
 
-    private static int ThrowExceptionConvert(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> c) =>
-        throw new NotSupportedException();
+    //private static int ThrowExceptionConvert(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> c) =>
+    //    throw new NotSupportedException();
 }

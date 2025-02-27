@@ -1,4 +1,8 @@
-﻿namespace KbinXml.Net.Internal;
+﻿using System;
+using System.Runtime.CompilerServices;
+using KbinXml.Net.Utils;
+
+namespace KbinXml.Net.Internal;
 
 internal class NodeType
 {
@@ -8,17 +12,25 @@ internal class NodeType
 
     public string Name { get; }
 
-    public WriteStringDelegate WriteString { get; }
+    public ITypeConverter Converter { get; }
 
-    public ByteToStringDelegate GetString { get; }
-
-    public NodeType(int size, int count, string name,
-        WriteStringDelegate writeStringDelegate, ByteToStringDelegate byteToStringDelegate)
+    public NodeType(int size, int count, string name, ITypeConverter converter)
     {
         Size = size;
         Count = count;
         Name = name;
-        WriteString = writeStringDelegate;
-        GetString = byteToStringDelegate;
+        Converter = converter;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int WriteString(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> str)
+    {
+        return Converter.WriteString(ref builder, str);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string GetString(ReadOnlySpan<byte> bytes)
+    {
+        return Converter.ToString(bytes);
     }
 }

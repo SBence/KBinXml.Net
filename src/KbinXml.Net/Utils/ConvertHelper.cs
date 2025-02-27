@@ -9,7 +9,7 @@ namespace KbinXml.Net.Utils;
 
 internal static class ConvertHelper
 {
-    private static readonly NumberFormatInfo USNumberFormat = new CultureInfo("en-US", false).NumberFormat;
+    internal static readonly NumberFormatInfo USNumberFormat = new CultureInfo("en-US", false).NumberFormat;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteU8String(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> str)
@@ -77,22 +77,22 @@ internal static class ConvertHelper
         return BitConverterHelper.WriteBeBytes(ref builder, ParseHelper.ParseDouble(input, USNumberFormat));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: loop here
-    public static int WriteIp4String(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> input)
-    {
-        var bytes = IPAddress.Parse(input
-#if !NETCOREAPP3_1_OR_GREATER
-                .ToString()
-#endif
-        ).GetAddressBytes();
+//    [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: loop here
+//    public static int WriteIp4String(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> input)
+//    {
+//        var bytes = IPAddress.Parse(input
+//#if !NETCOREAPP3_1_OR_GREATER
+//                .ToString()
+//#endif
+//        ).GetAddressBytes();
 
-        for (int i = 0; i < bytes.Length; i++)
-        {
-            builder.Append(bytes[i]);
-        }
+//        for (int i = 0; i < bytes.Length; i++)
+//        {
+//            builder.Append(bytes[i]);
+//        }
 
-        return bytes.Length;
-    }
+//        return bytes.Length;
+//    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string U8ToString(ReadOnlySpan<byte> bytes)
@@ -154,20 +154,20 @@ internal static class ConvertHelper
         return BitConverterHelper.ToBeDouble(bytes).ToString("0.000000");
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string Ip4ToString(ReadOnlySpan<byte> bytes)
-    {
-        var privateAddress = MemoryMarshal.Read<uint>(bytes);
-        Span<char> dst = stackalloc char[15];
-        int charsWritten = IPv4AddressToStringHelper(privateAddress, dst);
-        unsafe
-        {
-            fixed (char* p = dst)
-            {
-                return new string(p, 0, charsWritten);
-            }
-        }
-    }
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //public static string Ip4ToString(ReadOnlySpan<byte> bytes)
+    //{
+    //    var privateAddress = MemoryMarshal.Read<uint>(bytes);
+    //    Span<char> dst = stackalloc char[15];
+    //    int charsWritten = IPv4AddressToStringHelper(privateAddress, dst);
+    //    unsafe
+    //    {
+    //        fixed (char* p = dst)
+    //        {
+    //            return new string(p, 0, charsWritten);
+    //        }
+    //    }
+    //}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string ToHexString(ReadOnlySpan<byte> bytes)
@@ -185,39 +185,9 @@ internal static class ConvertHelper
         return HexConverter.ToString(bytes, HexConverter.Casing.Lower);
     }
 
-    [InlineMethod.Inline]
-    private static int IPv4AddressToStringHelper(uint address, Span<char> dst)
-    {
-        int offset = 0;
-        address = (uint)IPAddress.NetworkToHostOrder(unchecked((int)address));
-
-        FormatIPv4AddressNumber((int)((address >> 24) & 0xFF), dst, ref offset);
-        dst[offset++] = '.';
-        FormatIPv4AddressNumber((int)((address >> 16) & 0xFF), dst, ref offset);
-        dst[offset++] = '.';
-        FormatIPv4AddressNumber((int)((address >> 8) & 0xFF), dst, ref offset);
-        dst[offset++] = '.';
-        FormatIPv4AddressNumber((int)(address & 0xFF), dst, ref offset);
-
-        return offset;
-    }
-
-    [InlineMethod.Inline]
-    private static void FormatIPv4AddressNumber(int number, Span<char> dst, ref int offset)
-    {
-        offset += number > 99 ? 3 : number > 9 ? 2 : 1;
-
-        int i = offset;
-        do
-        {
-            number = Math.DivRem(number, 10, out int rem);
-            dst[--i] = (char)('0' + rem);
-        } while (number != 0);
-    }
-
     //[InlineMethod.Inline]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NumberStyles GetNumberStyle(ReadOnlySpan<char> str, out ReadOnlySpan<char> hex)
+    internal static NumberStyles GetNumberStyle(ReadOnlySpan<char> str, out ReadOnlySpan<char> hex)
     {
         var isSpanHex = str.Length > 2 &&
                         (str[1] == 'x' && str[0] == '0' || str[1] == 'H' && str[0] == '&');
