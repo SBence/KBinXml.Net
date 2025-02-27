@@ -61,15 +61,23 @@ public class Program
 
     private static void SmallTest()
     {
-        var _kbin = KbinConverter.Write(File.ReadAllText(@"data/small.xml"), KnownEncodings.ShiftJIS);
-        var linq = KbinConverter.ReadXmlLinq(_kbin);
-        var _xmlStr = linq.ToString();
-        KbinConverter.Write(_xmlStr, KnownEncodings.ShiftJIS, new WriteOptions { RepairedPrefix = "PREFIX_" });
-
-
         var smallText = File.ReadAllText("data/small.xml");
-        byte[] smallKbin = KbinConverter.Write(smallText, KnownEncodings.ShiftJIS);
-        var smallXmlRead = KbinConverter.ReadXmlBytes(smallKbin);
+    
+        for (int i = 0; i < 500; i++)
+        {
+            if (i == 200)
+            {
+
+            }
+            var _kbin = KbinConverter.Write(File.ReadAllText(@"data/small.xml"), KnownEncodings.ShiftJIS);
+            var linq = KbinConverter.ReadXmlLinq(_kbin);
+            var _xmlStr = linq.ToString();
+            KbinConverter.Write(_xmlStr, KnownEncodings.ShiftJIS, new WriteOptions { RepairedPrefix = "PREFIX_" });
+
+
+            byte[] smallKbin = KbinConverter.Write(smallText, KnownEncodings.ShiftJIS);
+            var smallXmlRead = KbinConverter.ReadXmlBytes(smallKbin);
+        }
     }
 
     private static void InvalidTest()

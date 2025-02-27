@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
@@ -123,8 +124,13 @@ internal class NullLogger : IKbinLogger
     }
 
     [Conditional("DEBUG")]
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void LogXmlNodeEnd(Stack<XContainer> nodeStack)
+    {
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Log(Func<string> s)
     {
     }
 }

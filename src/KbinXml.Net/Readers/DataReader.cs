@@ -133,12 +133,13 @@ internal class DataReader : BeBinaryReader
 #if DEBUG
             if (alignedPos != _position)
             {
-                Console.WriteLine($"---> {pointerName} from {alignedPos + BaseOffset:X8} to {_position + BaseOffset:X8}");
+                var pos = alignedPos;
+                KbinConverter.Logger.Log(() => $"---> {pointerName} from {pos + BaseOffset:X8} to {_position + BaseOffset:X8}");
             }
 #endif
             alignedPos = _position;
 #if DEBUG
-            Console.WriteLine($"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
+            KbinConverter.Logger.Log(() => $"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
 #endif
             _position += 4;
         }

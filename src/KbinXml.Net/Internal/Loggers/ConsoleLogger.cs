@@ -142,6 +142,12 @@ internal class ConsoleLogger : IKbinLogger
         Console.ResetColor();
     }
 
+    [DebuggerStepThrough]
+    public void Log(Func<string> s)
+    {
+        Console.WriteLine(s());
+    }
+
     private static string GetNodePath(Stack<XContainer> nodeStack)
     {
         var e = string.Join(".", nodeStack.ToArray().Reverse().Select(k =>

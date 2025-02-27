@@ -1,4 +1,5 @@
 ﻿#if DEBUG
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 #endif
@@ -28,5 +29,6 @@ internal interface IKbinLogger
     void LogXmlAttribute(string attributeName, string? value);
     void LogXmlNodeStart(Stack<XContainer> nodeStack);
     void LogXmlNodeEnd(Stack<XContainer> nodeStack);
+    void Log(Func<string> s);
 #endif
 }

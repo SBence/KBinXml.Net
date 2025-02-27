@@ -138,7 +138,7 @@ public static partial class KbinConverter
         if (!EncodingDictionary.ReverseEncodingMap.ContainsKey(encoding))
             throw new ArgumentOutOfRangeException(nameof(encoding), encoding, "Unsupported encoding for KBin");
 
-        var holdingAttrs = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        var holdingAttrs = new SortedDictionary<string, string>(StringComparer.Ordinal); // 排序是必要的
         string holdingValue = "";
         string? typeStr = null;
         string? arrayCountStr = null;
