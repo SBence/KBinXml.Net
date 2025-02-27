@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace KbinXml.Net.Utils;
 
@@ -13,7 +12,7 @@ internal static class SixbitHelperCoreClrOptimized
     public static unsafe void Encode(ReadOnlySpan<byte> buffer, Span<byte> output)
     {
         if (buffer.IsEmpty) return;
-        int requiredOutputSize = (buffer.Length * 6 + 7) / 8;
+        int requiredOutputSize = (buffer.Length * 6 + 7) >> 3;
         if (output.Length < requiredOutputSize)
             throw new ArgumentException("Output buffer is too small.", nameof(output));
 
@@ -26,7 +25,7 @@ internal static class SixbitHelperCoreClrOptimized
             int globalBitIndex = 0;
 
             // 批处理，每次处理4个6位块（24位）
-            int batchCount = length / 4;
+            int batchCount = length >> 2;
             for (int i = 0; i < batchCount; i++)
             {
                 uint chunk = *(uint*)buf;
@@ -82,7 +81,7 @@ internal static class SixbitHelperCoreClrOptimized
             int globalBitIndex = 0;
 
             // 批处理，每次处理4个6位块（24位）
-            int batchCount = length / 4;
+            int batchCount = length >> 2;
             for (int i = 0; i < batchCount; i++)
             {
                 // 读取24位数据
