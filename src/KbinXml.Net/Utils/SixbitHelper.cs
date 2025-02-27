@@ -8,7 +8,7 @@ using KbinXml.Net.Internal;
 //using SixbitHelperImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
 #if NET6_0_OR_GREATER
 using SixbitHelperEncImpl = KbinXml.Net.Utils.SixbitHelperCoreClrOptimized;
-using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
+using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperCoreClrOptimized;
 #else
 using SixbitHelperEncImpl = KbinXml.Net.Utils.SixbitHelperSuperOptimized;
 using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperSuperOptimized;
