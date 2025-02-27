@@ -244,7 +244,7 @@ public static partial class KbinConverter
                     var span = array
                         ? dataReader.Read32BitAligned(arraySize, out pos, out var flag)
                         : dataReader.ReadBytes(arraySize, out pos, out flag);
-                    var stringBuilder = new StringBuilder();
+                    var stringBuilder = new ValueStringBuilder(256);
                     var loopCount = arraySize / propertyType.Size;
                     for (var i = 0; i < loopCount; i++)
                     {
