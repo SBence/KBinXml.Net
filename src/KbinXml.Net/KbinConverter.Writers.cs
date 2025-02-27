@@ -45,7 +45,7 @@ public static partial class KbinConverter
             context.NodeWriter.Dispose();
         }
     }
-    
+
     /// <summary>
     /// Converts a LINQ-to-XML element/document to KBin-formatted binary data.
     /// </summary>
@@ -102,7 +102,7 @@ public static partial class KbinConverter
             context.NodeWriter.Dispose();
         }
     }
-    
+
     /// <summary>
     /// Converts UTF-8 encoded XML bytes to KBin-formatted binary data.
     /// </summary>
@@ -154,7 +154,7 @@ public static partial class KbinConverter
                     context.DataWriter.WriteBinary(holdingValue);
                 else
                 {
-                    var type = TypeDictionary.TypeMap[typeid];
+                    var type = NodeTypeFactory.GetNodeType(typeid);
                     var value = holdingValue.SpanSplit(' ');
                     var requiredBytes = (uint)(type.Size * type.Count);
                     if (arrayCountStr != null)
@@ -294,7 +294,7 @@ public static partial class KbinConverter
                     }
                     else
                     {
-                        typeid = TypeDictionary.ReverseTypeMap[typeStr];
+                        typeid = NodeTypeFactory.GetNodeTypeId(typeStr);
                         if (arrayCountStr != null)
                             context.NodeWriter.WriteU8((byte)(typeid | 0x40));
                         else

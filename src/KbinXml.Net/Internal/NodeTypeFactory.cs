@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using KbinXml.Net.Utils;
 using static KbinXml.Net.Utils.ConvertHelper;
+
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -10,9 +13,9 @@ using System.Collections.Frozen;
 
 namespace KbinXml.Net.Internal;
 
-internal static class TypeDictionary
+internal static class NodeTypeFactory
 {
-    internal static readonly IReadOnlyDictionary<byte, NodeType> TypeMap = new Dictionary<byte, NodeType>
+    private static readonly IReadOnlyDictionary<byte, NodeType> NodesDictionary = new Dictionary<byte, NodeType>
             {
                 { 2, new NodeType(1, 1, "s8", WriteS8String, S8ToString) },
                 { 3, new NodeType(1, 1, "u8", WriteU8String, U8ToString) },
@@ -73,7 +76,9 @@ internal static class TypeDictionary
 #endif
         ;
 
-    internal static readonly IReadOnlyDictionary<string, byte> ReverseTypeMap = TypeMap
+    private static readonly NodeType?[] NodesArray = new NodeType?[57];
+
+    private static readonly IReadOnlyDictionary<string, byte> ReverseTypeMap = NodesDictionary
 #if NET8_0_OR_GREATER
             .ToFrozenDictionary(x => x.Value.Name, x => x.Key)
 #else
@@ -81,14 +86,53 @@ internal static class TypeDictionary
 #endif
         ;
 
+
+    static NodeTypeFactory()
+    {
+        foreach (var nodeType in NodesDictionary)
+        {
+            NodesArray[nodeType.Key] = nodeType.Value;
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetNodeType(byte typeCode,
+#if NET6_0_OR_GREATER
+        [NotNullWhen(true)]
+#endif
+        out NodeType? nodeType)
+    {
+        nodeType = NodesArray[typeCode];
+        return nodeType != null;
+        //if (NodesDictionary.TryGetValue(typeCode, out var converter))
+        //{
+        //    return converter;
+        //}
+        //throw new InvalidOperationException($"Unknown type code: {typeCode}");
+    }
+
+    public static NodeType GetNodeType(byte typeCode)
+    {
+        var nodeType = NodesArray[typeCode];
+        if (nodeType == null) throw new InvalidOperationException($"Unknown type code: {typeCode}");
+        return nodeType;
+    }
+
     /// <summary>
     /// Get an instance of a <see cref="NodeType"/> from the internal type map.
     /// </summary>
     /// <param name="name">The name of the type.</param>
     /// <returns>The found type.</returns>
-    public static NodeType GetType(string name)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static NodeType GetNodeType(string name)
     {
-        return TypeMap[ReverseTypeMap[name]];
+        return NodesDictionary[GetNodeTypeId(name)];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte GetNodeTypeId(string name)
+    {
+        return ReverseTypeMap[name];
     }
 
     private static string ThrowExceptionConvert(ReadOnlySpan<byte> c) => throw new NotSupportedException();

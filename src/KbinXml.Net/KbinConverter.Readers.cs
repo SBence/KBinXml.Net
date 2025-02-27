@@ -186,7 +186,7 @@ public static partial class KbinConverter
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            else if (TypeDictionary.TypeMap.TryGetValue(nodeType, out var propertyType))
+            else if (NodeTypeFactory.TryGetNodeType(nodeType, out var propertyType))
             {
                 Logger.LogNodeData(propertyType, pos, array);
 
@@ -244,7 +244,7 @@ public static partial class KbinConverter
                     var span = array
                         ? dataReader.Read32BitAligned(arraySize, out pos, out var flag)
                         : dataReader.ReadBytes(arraySize, out pos, out flag);
-                    var stringBuilder = new ValueStringBuilder(256);
+                    var stringBuilder = new ValueStringBuilder(1024);
                     var loopCount = arraySize / propertyType.Size;
                     for (var i = 0; i < loopCount; i++)
                     {
