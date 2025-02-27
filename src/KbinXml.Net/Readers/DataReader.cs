@@ -30,45 +30,26 @@ internal class DataReader : BeBinaryReader
 #endif
         flag = "p32";
         var result = ReadBytes(_position, count);
-        var left = count & 3;
-        if (left != 0)
-        {
-            count += (4 - left);
-        }
+        //var left = count & 3;
+        //if (left != 0)
+        //{
+        //    count += (4 - left);
+        //}
 
-        _position += count;
-
+        //_position += count;
+        _position += (count + 3) & ~3; // 等价于向上取整到4的倍数
         return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Memory<byte> Read16BitAligned(out int position, out string flag)
     {
+        flag = "p16";
         // Realign before read.
         // If need to, align pos16 to next 4-bytes chunk, and move the generic position to next chunk
-        if ((_pos16 & 3) == 0)
-        {
-#if DEBUG
-            if (_pos16 != _position)
-            {
-                Console.WriteLine($"---> p16 from {_pos16 + BaseOffset:X8} to {_position + BaseOffset:X8}");
-            }
-#endif
-            _pos16 = _position;
+        AlignPosition(ref _pos16, flag);
+        position = GetAlignedPosition(_pos16);
 
-#if DEBUG
-            Console.WriteLine($"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
-#endif
-            _position += 4;
-        }
-
-#if DEBUG
-        position = _pos16 + BaseOffset;
-#else
-        position = _pos16;
-#endif
-
-        flag = "p16";
         var result = ReadBytes(_pos16, 2);
         _pos16 += 2;
 
@@ -78,36 +59,18 @@ internal class DataReader : BeBinaryReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Memory<byte> Read8BitAligned(out int position, out string flag)
     {
+        flag = "p8";
         // Realign before read.
         // If need to, align pos8 to next 4-bytes chunk, and move the generic position to next chunk
-        if ((_pos8 & 3) == 0)
-        {
-#if DEBUG
-            if (_pos8 != _position)
-            {
-                Console.WriteLine($"---> p8 from {_pos8 + BaseOffset:X8} to {_position + BaseOffset:X8}");
-            }
-#endif
-            _pos8 = _position;
-
-#if DEBUG
-            Console.WriteLine($"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
-#endif
-            _position += 4;
-        }
-
-#if DEBUG
-        position = _pos8 + BaseOffset;
-#else
-        position = _pos8;
-#endif
-        flag = "p8";
+        AlignPosition(ref _pos8, flag);
+        position = GetAlignedPosition(_pos8);
 
         var result = ReadBytes(_pos8, 1);
         _pos8++;
 
         return result;
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override Memory<byte> ReadBytes(int count, out int position, out string flag)
@@ -160,5 +123,34 @@ internal class DataReader : BeBinaryReader
             actualCount = count;
         var slice = Buffer.Slice(offset, actualCount);
         return slice;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AlignPosition(ref int alignedPos, string pointerName)
+    {
+        if ((alignedPos & 3) == 0)
+        {
+#if DEBUG
+            if (alignedPos != _position)
+            {
+                Console.WriteLine($"---> {pointerName} from {alignedPos + BaseOffset:X8} to {_position + BaseOffset:X8}");
+            }
+#endif
+            alignedPos = _position;
+#if DEBUG
+            Console.WriteLine($"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
+#endif
+            _position += 4;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int GetAlignedPosition(int alignedPos)
+    {
+#if DEBUG
+        return alignedPos + BaseOffset;
+#else
+        return alignedPos;
+#endif
     }
 }

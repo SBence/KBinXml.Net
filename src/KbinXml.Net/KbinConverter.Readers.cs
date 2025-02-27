@@ -130,6 +130,7 @@ public static partial class KbinConverter
         writerProvider.WriteStartDocument();
         string? currentType = null;
         string? holdValue = null;
+        Span<char> charSpan = stackalloc char[Constants.MaxStackLength];
         while (true)
         {
             var nodeType = nodeReader.ReadU8(out var pos, out _);
@@ -244,7 +245,7 @@ public static partial class KbinConverter
                     var span = array
                         ? dataReader.Read32BitAligned(arraySize, out pos, out var flag)
                         : dataReader.ReadBytes(arraySize, out pos, out flag);
-                    var stringBuilder = new ValueStringBuilder(1024);
+                    var stringBuilder = new ValueStringBuilder(charSpan);
                     var loopCount = arraySize / propertyType.Size;
                     for (var i = 0; i < loopCount; i++)
                     {
