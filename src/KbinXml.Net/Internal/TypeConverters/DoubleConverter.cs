@@ -15,7 +15,7 @@ internal sealed class DoubleConverter : ITypeConverter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int WriteString(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> str)
     {
-        return BitConverterHelper.WriteBeBytes(ref builder, ParseHelper.ParseDouble(str, ConvertHelper.USNumberFormat));
+        return BitConverterHelper.WriteBeBytes(ref builder, ParseHelper.ParseDouble(str, ConvertHelper.UsNumberFormat));
         // 返回 8（大端字节序写入 8 个字节）
     }
     

@@ -30,9 +30,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteS8String(ref builder, str);
+                    S8Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.S8ToString(bytes));
+                }, bytes => S8Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -44,9 +44,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteS16String(ref builder, str);
+                    S16Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.S16ToString(bytes));
+                }, bytes => S16Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -58,9 +58,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteS32String(ref builder, str);
+                    S32Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.S32ToString(bytes));
+                }, bytes => S32Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -72,9 +72,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteS64String(ref builder, str);
+                    S64Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.S64ToString(bytes));
+                }, bytes => S64Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -86,9 +86,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteU16String(ref builder, str);
+                    U16Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.U16ToString(bytes));
+                }, bytes => U16Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -100,9 +100,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteU32String(ref builder, str);
+                    U32Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.U32ToString(bytes));
+                }, bytes => U32Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -114,9 +114,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteU64String(ref builder, str);
+                    U64Converter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.U64ToString(bytes));
+                }, bytes => U64Converter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -128,9 +128,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteSingleString(ref builder, str);
+                    FloatConverter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.SingleToString(bytes));
+                }, bytes => FloatConverter.Instance.ToString(bytes));
         }
 
         [Theory]
@@ -142,9 +142,9 @@ namespace GeneralUnitTests
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    ConvertHelper.WriteDoubleString(ref builder, str);
+                    DoubleConverter.Instance.WriteString(ref builder, str);
                     return builder.AsSpan().ToArray();
-                }, bytes => ConvertHelper.DoubleToString(bytes));
+                }, bytes => DoubleConverter.Instance.ToString(bytes));
         }
 
         [Theory]

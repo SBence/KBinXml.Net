@@ -15,7 +15,7 @@ internal sealed class FloatConverter : ITypeConverter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int WriteString(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> str)
     {
-        return BitConverterHelper.WriteBeBytes(ref builder, ParseHelper.ParseSingle(str, ConvertHelper.USNumberFormat));
+        return BitConverterHelper.WriteBeBytes(ref builder, ParseHelper.ParseSingle(str, ConvertHelper.UsNumberFormat));
         // 返回 4（大端字节序写入 4 个字节）
     }
     

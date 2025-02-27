@@ -4,13 +4,13 @@ using KbinXml.Net.Utils;
 
 namespace KbinXml.Net.Internal.TypeConverters;
 
-internal sealed class StrDummyConverter : ITypeConverter
+internal sealed class DummyStrConverter : ITypeConverter
 {
-    private StrDummyConverter()
+    private DummyStrConverter()
     {
     }
 
-    public static StrDummyConverter Instance { get; } = new();
+    public static DummyStrConverter Instance { get; } = new();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int WriteString(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> str)

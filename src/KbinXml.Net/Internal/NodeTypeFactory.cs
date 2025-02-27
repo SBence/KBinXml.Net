@@ -27,8 +27,8 @@ internal static class NodeTypeFactory
                 { 7, new NodeType(4, 1, "u32", U32Converter.Instance) },
                 { 8, new NodeType(8, 1, "s64", S64Converter.Instance) },
                 { 9, new NodeType(8, 1, "u64", U64Converter.Instance) },
-                { 10, new NodeType(0, 0, "bin", BinDummyConverter.Instance) },
-                { 11, new NodeType(0, 0, "str", StrDummyConverter.Instance) },
+                { 10, new NodeType(0, 0, "bin", DummyBinConverter.Instance) },
+                { 11, new NodeType(0, 0, "str", DummyStrConverter.Instance) },
                 { 12, new NodeType(4, 1, "ip4", Ip4Converter.Instance) },
                 { 13, new NodeType(4, 1, "time", U32Converter.Instance) },
                 { 14, new NodeType(4, 1, "float", FloatConverter.Instance) },
@@ -92,7 +92,6 @@ internal static class NodeTypeFactory
 #endif
         ;
 
-
     static NodeTypeFactory()
     {
         foreach (var nodeType in NodesDictionary)
@@ -110,11 +109,6 @@ internal static class NodeTypeFactory
     {
         nodeType = NodesArray[typeCode];
         return nodeType != null;
-        //if (NodesDictionary.TryGetValue(typeCode, out var converter))
-        //{
-        //    return converter;
-        //}
-        //throw new InvalidOperationException($"Unknown type code: {typeCode}");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,9 +135,4 @@ internal static class NodeTypeFactory
     {
         return ReverseTypeMap[name];
     }
-
-    //private static string ThrowExceptionConvert(ReadOnlySpan<byte> c) => throw new NotSupportedException();
-
-    //private static int ThrowExceptionConvert(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> c) =>
-    //    throw new NotSupportedException();
 }

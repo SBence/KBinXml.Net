@@ -14,7 +14,7 @@ internal sealed class Ip4Converter : ITypeConverter
 
     public static Ip4Converter Instance { get; } = new();
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: loop here
     public int WriteString(ref ValueListBuilder<byte> builder, ReadOnlySpan<char> str)
     {
         var bytes = IPAddress.Parse(str
