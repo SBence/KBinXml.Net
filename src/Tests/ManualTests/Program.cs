@@ -62,7 +62,7 @@ public class Program
     private static void SmallTest()
     {
         var smallText = File.ReadAllText("data/small.xml");
-    
+
         for (int i = 0; i < 500; i++)
         {
             if (i == 200)

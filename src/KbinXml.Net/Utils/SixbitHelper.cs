@@ -4,7 +4,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using KbinXml.Net.Internal;
-using KbinXml.Net.Utils;
 
 //using SixbitHelperImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
 #if NET6_0_OR_GREATER
@@ -103,7 +102,7 @@ public static class SixbitHelper
         }
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void FillInput(string content, Span<byte> buffer)
     {
         ref var contentRef = ref MemoryMarshal.GetReference(content.AsSpan());
@@ -113,7 +112,7 @@ public static class SixbitHelper
             Unsafe.Add(ref bufferRef, i) = CharsetMapping[Unsafe.Add(ref contentRef, i)];
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetString(Span<byte> input)
     {
         Span<char> chars = stackalloc char[input.Length];

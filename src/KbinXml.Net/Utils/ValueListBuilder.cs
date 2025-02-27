@@ -65,7 +65,7 @@ public ref struct ValueListBuilder<T> : IDisposable
         }
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Grow()
     {
         T[] array = ArrayPool<T>.Shared.Rent(_span.Length * 2);

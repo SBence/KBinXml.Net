@@ -13,7 +13,7 @@ internal class DataWriter : BeBinaryWriter
     private int _pos16;
     private int _pos8;
     private readonly Encoding _encoding;
-    
+
 #if NETCOREAPP3_1_OR_GREATER
     private readonly int _shiftVal;
 #endif
@@ -187,7 +187,7 @@ internal class DataWriter : BeBinaryWriter
         Realign16_8();
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WriteBytes(ReadOnlySpan<byte> buffer, ref int offset)
     {
         if (offset == Stream.Length)
@@ -211,7 +211,7 @@ internal class DataWriter : BeBinaryWriter
         }
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Realign16_8()
     {
         if ((_pos8 & 3) == 0)
@@ -225,7 +225,7 @@ internal class DataWriter : BeBinaryWriter
         }
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Pad(int target)
     {
         int left = (int)(target - Stream.Length);
@@ -235,6 +235,7 @@ internal class DataWriter : BeBinaryWriter
         else
         {
             // looks safe for kbin algorithm
+            //Span<byte> readOnlySpan = stackalloc byte[left];
             Stream.Write(stackalloc byte[left]);
             //byte[]? arr = null;
             //Span<byte> span = left <= Constants.MaxStackLength

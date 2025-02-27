@@ -47,7 +47,7 @@ public static partial class KbinConverter
             (XDocument)ReaderImpl(sourceBuffer, e => new XDocumentProvider(e, readOptions), out knownEncodings);
         return xDocument;
     }
-    
+
     /// <summary>
     /// Converts KBin binary data to raw XML bytes.
     /// </summary>
@@ -65,7 +65,7 @@ public static partial class KbinConverter
         var bytes = (byte[])ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions), out _);
         return bytes;
     }
-    
+
     /// <summary>
     /// Converts KBin binary data to raw XML bytes and outputs the detected encoding.
     /// </summary>
@@ -81,7 +81,7 @@ public static partial class KbinConverter
         var bytes = (byte[])ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions), out knownEncodings);
         return bytes;
     }
-    
+
     /// <summary>
     /// Converts KBin binary data to an <see cref="XmlDocument"/> representation.
     /// </summary>
@@ -100,7 +100,7 @@ public static partial class KbinConverter
             out var knownEncoding);
         return xmlDocument;
     }
-    
+
     /// <summary>
     /// Converts KBin binary data to an <see cref="XmlDocument"/> and outputs the detected encoding.
     /// </summary>
@@ -272,7 +272,6 @@ public static partial class KbinConverter
         }
     }
 
-    [InlineMethod.Inline]
     private static ReadContext GetReadContext(Memory<byte> sourceBuffer,
         Func<Encoding, WriterProvider> createWriterProvider)
     {

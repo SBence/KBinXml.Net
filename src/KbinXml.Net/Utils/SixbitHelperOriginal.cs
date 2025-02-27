@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace KbinXml.Net.Utils;
 
 internal static class SixbitHelperOriginal
 {
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EncodeFillOutput(ReadOnlySpan<byte> buffer, ref Span<byte> output)
     {
         for (var i = 0; i < buffer.Length * 6; i++)
@@ -12,7 +13,7 @@ internal static class SixbitHelperOriginal
                                     ((buffer[i / 6] >> (5 - (i % 6)) & 1) << (7 - (i & 7))));
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DecodeFillInput(ReadOnlySpan<byte> buffer, ref Span<byte> input)
     {
         for (var i = 0; i < input.Length * 6; i++)

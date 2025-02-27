@@ -108,16 +108,15 @@ namespace GeneralUnitTests
         private void DoWorks(string value)
         {
             var xml = XElement.Parse(value);
-            
+
             var bytes = new StableKbin.XmlWriter(xml, Encoding.UTF8).Write();
             var bytes2 = KbinConverter.Write(xml, KnownEncodings.UTF8, new WriteOptions() { StrictMode = false });
-            Assert.Equal(bytes, bytes2);
-            
             var result = new StableKbin.XmlReader(bytes).ReadLinq().ToString();
             var result2 = KbinConverter.ReadXmlLinq(bytes).ToString();
 
             _outputHelper.WriteLine(result);
             _outputHelper.WriteLine(result2);
+            Assert.Equal(bytes, bytes2);
             Assert.Equal(result, result2);
         }
     }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\..\dependencies\kbinxmlcs\kbinxmlcs\kbinxmlcs.csproj" />
     <ProjectReference Include="..\..\..\dependencies\KBinXML\KBinXML\KBinXML.csproj" />
     <ProjectReference Include="..\..\KbinXml.Net\KbinXml.Net.csproj" />
+    <ProjectReference Include="..\GeneralUnitTests\GeneralUnitTests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

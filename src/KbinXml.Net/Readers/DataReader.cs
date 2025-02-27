@@ -113,7 +113,7 @@ internal class DataReader : BeBinaryReader
         return ConvertHelper.ToHexString(bin.Span);
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Memory<byte> ReadBytes(int offset, int count)
     {
         int actualCount;

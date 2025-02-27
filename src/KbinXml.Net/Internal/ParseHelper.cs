@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace KbinXml.Net.Internal;
 
 internal static class ParseHelper
 {
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ParseBoolean(ReadOnlySpan<char> input)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -15,7 +16,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static byte ParseByte(ReadOnlySpan<char> input, NumberStyles numberStyles)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -25,7 +26,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static sbyte ParseSByte(ReadOnlySpan<char> input)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -35,7 +36,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static short ParseInt16(ReadOnlySpan<char> input)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -45,7 +46,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort ParseUInt16(ReadOnlySpan<char> input, NumberStyles numberStyles)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -55,7 +56,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ParseInt32(ReadOnlySpan<char> input)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -65,7 +66,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ParseUInt32(ReadOnlySpan<char> input, NumberStyles numberStyles)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -75,7 +76,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long ParseInt64(ReadOnlySpan<char> input)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -85,7 +86,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong ParseUInt64(ReadOnlySpan<char> input, NumberStyles numberStyles)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -95,7 +96,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ParseSingle(ReadOnlySpan<char> input, NumberFormatInfo? nfi = null)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -105,7 +106,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static double ParseDouble(ReadOnlySpan<char> input, NumberFormatInfo? nfi = null)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -115,7 +116,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T ParseEnum<T>(string value) where T : struct
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -125,7 +126,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static DateTime ParseDateTime(ReadOnlySpan<char> input)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -135,7 +136,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseBoolean(ReadOnlySpan<char> input, out bool value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -145,7 +146,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseByte(ReadOnlySpan<char> input, out byte value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -155,7 +156,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseSByte(ReadOnlySpan<char> input, out sbyte value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -165,7 +166,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseInt16(ReadOnlySpan<char> input, out short value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -175,7 +176,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseUInt16(ReadOnlySpan<char> input, out ushort value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -185,7 +186,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseInt32(ReadOnlySpan<char> input, out int value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -195,7 +196,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseUInt32(ReadOnlySpan<char> input, out uint value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -205,7 +206,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseInt64(ReadOnlySpan<char> input, out long value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -215,7 +216,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseUInt64(ReadOnlySpan<char> input, out ulong value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -225,7 +226,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseSingle(ReadOnlySpan<char> input, out float value, NumberFormatInfo? nfi = null)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -235,7 +236,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseDouble(ReadOnlySpan<char> input, out double value, NumberFormatInfo? nfi = null)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -245,7 +246,7 @@ internal static class ParseHelper
 #endif
     }
 
-    [InlineMethod.Inline]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryParseDateTime(ReadOnlySpan<char> input, out DateTime value)
     {
 #if NETCOREAPP3_1_OR_GREATER
