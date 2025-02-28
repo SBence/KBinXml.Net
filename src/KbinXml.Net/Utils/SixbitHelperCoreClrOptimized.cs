@@ -32,10 +32,11 @@ internal static class SixbitHelperCoreClrOptimized
                 buf += 4;
 
                 // 提取四个6位块并组合为24位
-                uint sixBits0 = (chunk & 0x0000003F);         // 最低 6 位
-                uint sixBits1 = (chunk & 0x00003F00) >> 8;    // 第 8-13 位
-                uint sixBits2 = (chunk & 0x003F0000) >> 16;   // 第 16-21 位
-                uint sixBits3 = (chunk & 0x3F000000) >> 24;   // 第 24-29 位
+                const uint MASK = 0x3F;
+                uint sixBits0 = chunk & MASK;
+                uint sixBits1 = (chunk >> 8) & MASK;
+                uint sixBits2 = (chunk >> 16) & MASK;
+                uint sixBits3 = (chunk >> 24) & MASK;
                 uint combined = (sixBits0 << 18) | (sixBits1 << 12) | (sixBits2 << 6) | sixBits3;
 
                 // 计算起始写入位置
@@ -89,10 +90,11 @@ internal static class SixbitHelperCoreClrOptimized
                 globalBitIndex += 24;
 
                 // 从24位中提取4个6位块
-                byte sixBits0 = (byte)((combined >> 18) & 0x3F);
-                byte sixBits1 = (byte)((combined >> 12) & 0x3F);
-                byte sixBits2 = (byte)((combined >> 6) & 0x3F);
-                byte sixBits3 = (byte)(combined & 0x3F);
+                const uint MASK = 0x3F;
+                byte sixBits0 = (byte)((combined >> 18) & MASK);
+                byte sixBits1 = (byte)((combined >> 12) & MASK);
+                byte sixBits2 = (byte)((combined >> 6) & MASK);
+                byte sixBits3 = (byte)(combined & MASK);
 
                 // 写入输出缓冲区
                 *inPtr++ = sixBits0;
@@ -229,6 +231,7 @@ internal static class SixbitHelperCoreClrOptimized
                 sixBits |= (byte)(buf[bufferByte + 1] >> (8 - bitsFromSecond));
             }
         }
+
         return sixBits;
     }
 }
