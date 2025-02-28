@@ -138,128 +138,18 @@ public static partial class KbinConverter
         if (!EncodingDictionary.ReverseEncodingMap.ContainsKey(encoding))
             throw new ArgumentOutOfRangeException(nameof(encoding), encoding, "Unsupported encoding for KBin");
 
-        var holdingAttrs = new SortedDictionary<string, string>(StringComparer.Ordinal); // 排序是必要的
+        var holdingAttrs = new List<KeyValuePair<string, string>>();
         string holdingValue = "";
         string? typeStr = null;
         string? arrayCountStr = null;
         byte typeid = 0;
-
-        void EnsureHolding()
-        {
-            if (typeStr != null)
-            {
-                if (typeStr == "str")
-                    context.DataWriter.WriteString(holdingValue);
-                else if (typeStr == "bin")
-                    context.DataWriter.WriteBinary(holdingValue);
-                else
-                {
-                    var type = NodeTypeFactory.GetNodeType(typeid);
-                    var value = holdingValue.SpanSplit(' ');
-                    var requiredBytes = (uint)(type.Size * type.Count);
-                    if (arrayCountStr != null)
-                    {
-                        requiredBytes *= uint.Parse(arrayCountStr);
-                        context.DataWriter.WriteU32(requiredBytes);
-                    }
-
-                    if (requiredBytes > int.MaxValue)
-                        throw new KbinException("uint size is greater than int.MaxValue");
-
-                    var iRequiredBytes = (int)requiredBytes;
-                    byte[]? arr = null;
-                    var span = iRequiredBytes <= Constants.MaxStackLength
-                        ? stackalloc byte[iRequiredBytes]
-                        : arr = ArrayPool<byte>.Shared.Rent(iRequiredBytes);
-
-                    if (arr != null) span = span.Slice(0, iRequiredBytes);
-                    var builder = new ValueListBuilder<byte>(span);
-
-                    try
-                    {
-                        int i = 0;
-                        foreach (var s in value)
-                        {
-                            try
-                            {
-                                if (i == iRequiredBytes)
-                                {
-                                    if (writeOptions.StrictMode)
-                                        throw new ArgumentOutOfRangeException("Length", holdingValue.Split(' ').Length,
-                                            "The array length doesn't match the \"__count\" attribute. Expect: " +
-                                            arrayCountStr);
-                                    break;
-                                }
-
-                                var add = type.WriteString(ref builder, s);
-                                if (add < type.Size)
-                                {
-                                    var left = type.Size - add;
-                                    for (var j = 0; j < left; j++) builder.Append(0);
-                                }
-
-                                i += type.Size;
-                            }
-                            catch (Exception e)
-                            {
-                                throw new KbinException(
-                                    $"Error while writing data '{s.ToString()}'. See InnerException for more information.",
-                                    e);
-                            }
-                        }
-
-                        if (i != requiredBytes)
-                        {
-                            if (writeOptions.StrictMode)
-                                throw new ArgumentOutOfRangeException("Length", builder.Length / type.Size,
-                                    "The array length doesn't match the \"__count\" attribute. Expect: " +
-                                    arrayCountStr);
-
-                            while (i != requiredBytes)
-                            {
-                                builder.Append(0);
-                                i++;
-                            }
-                        }
-
-                        // force to write as 32bit if is array
-                        if (arrayCountStr != null)
-                            context.DataWriter.Write32BitAligned(builder.AsSpan());
-                        else
-                            context.DataWriter.WriteBytes(builder.AsSpan());
-                    }
-                    finally
-                    {
-                        builder.Dispose();
-                        if (arr != null) ArrayPool<byte>.Shared.Return(arr);
-                    }
-                }
-
-                typeStr = null;
-                arrayCountStr = null;
-                holdingValue = "";
-                typeid = 0;
-            }
-
-            if (holdingAttrs.Count > 0)
-            {
-                foreach (var attribute in holdingAttrs)
-                {
-                    context.NodeWriter.WriteU8(0x2E);
-                    context.NodeWriter.WriteString(attribute.Key);
-                    context.DataWriter.WriteString(attribute.Value);
-                }
-
-                holdingAttrs.Clear();
-            }
-        }
 
         while (reader.Read())
         {
             switch (reader.NodeType)
             {
                 case XmlNodeType.Element:
-                    EnsureHolding();
+                    EnsureHolding(ref typeStr, context, ref holdingValue, ref typeid, ref arrayCountStr, writeOptions, holdingAttrs);
                     //Console.WriteLine("Start Element {0}", reader.Name);
                     if (reader.AttributeCount > 0)
                     {
@@ -280,7 +170,7 @@ public static partial class KbinConverter
                             }
                             else
                             {
-                                holdingAttrs.Add(GetActualName(reader.Name, writeOptions.RepairedPrefix), reader.Value);
+                                holdingAttrs.Add(new KeyValuePair<string, string>(GetActualName(reader.Name, writeOptions.RepairedPrefix), reader.Value));
                             }
                         }
 
@@ -294,7 +184,7 @@ public static partial class KbinConverter
                     }
                     else
                     {
-                        typeid = NodeTypeFactory.GetNodeTypeId(typeStr);
+                        typeid = NodeTypeFactory.GetNodeTypeId(typeStr); // 内部为字典操作
                         if (arrayCountStr != null)
                             context.NodeWriter.WriteU8((byte)(typeid | 0x40));
                         else
@@ -305,7 +195,7 @@ public static partial class KbinConverter
 
                     if (reader.IsEmptyElement)
                     {
-                        EnsureHolding();
+                        EnsureHolding(ref typeStr, context, ref holdingValue, ref typeid, ref arrayCountStr, writeOptions, holdingAttrs);
                         context.NodeWriter.WriteU8(0xFE);
                     }
 
@@ -314,7 +204,7 @@ public static partial class KbinConverter
                     holdingValue = reader.Value;
                     break;
                 case XmlNodeType.EndElement:
-                    EnsureHolding();
+                    EnsureHolding(ref typeStr, context, ref holdingValue, ref typeid, ref arrayCountStr, writeOptions, holdingAttrs);
                     context.NodeWriter.WriteU8(0xFE);
                     break;
                 default:
@@ -324,7 +214,7 @@ public static partial class KbinConverter
             }
         }
 
-        EnsureHolding();
+        EnsureHolding(ref typeStr, context, ref holdingValue, ref typeid, ref arrayCountStr, writeOptions, holdingAttrs);
 
         context.NodeWriter.WriteU8(255);
         context.NodeWriter.Pad();
@@ -349,6 +239,119 @@ public static partial class KbinConverter
         context.DataWriter.Stream.WriteTo(output.Stream);
 
         return output.ToArray();
+    }
+
+    private static void EnsureHolding(ref string? typeStr, WriteContext context, ref string holdingValue, ref byte typeid, ref string? arrayCountStr, WriteOptions writeOptions, List<KeyValuePair<string, string>>? holdingAttrs)
+    {
+        if (typeStr != null)
+        {
+            if (typeStr == "str")
+                context.DataWriter.WriteString(holdingValue);
+            else if (typeStr == "bin")
+                context.DataWriter.WriteBinary(holdingValue);
+            else
+            {
+                var type = NodeTypeFactory.GetNodeType(typeid); // 内部为字典操作
+                var value = holdingValue.SpanSplit(' '); // 内部span处理，无字符串操作
+                var requiredBytes = (uint)(type.Size * type.Count);
+                if (arrayCountStr != null)
+                {
+                    requiredBytes *= uint.Parse(arrayCountStr);
+                    context.DataWriter.WriteU32(requiredBytes);
+                }
+
+                if (requiredBytes > int.MaxValue)
+                    throw new KbinException("uint size is greater than int.MaxValue");
+
+                var iRequiredBytes = (int)requiredBytes;
+                byte[]? arr = null;
+                var span = iRequiredBytes <= Constants.MaxStackLength
+                    ? stackalloc byte[iRequiredBytes]
+                    : arr = ArrayPool<byte>.Shared.Rent(iRequiredBytes);
+
+                if (arr != null) span = span.Slice(0, iRequiredBytes);
+                var builder = new ValueListBuilder<byte>(span);
+
+                try
+                {
+                    int i = 0;
+                    foreach (var s in value)
+                    {
+                        try
+                        {
+                            if (i == iRequiredBytes)
+                            {
+                                if (writeOptions.StrictMode)
+                                    throw new ArgumentOutOfRangeException("Length", holdingValue.Split(' ').Length,
+                                        "The array length doesn't match the \"__count\" attribute. Expect: " +
+                                        arrayCountStr);
+                                break;
+                            }
+
+                            var add = type.WriteString(ref builder, s);
+                            if (add < type.Size)
+                            {
+                                var left = type.Size - add;
+                                for (var j = 0; j < left; j++) builder.Append(0);
+                            }
+
+                            i += type.Size;
+                        }
+                        catch (Exception e)
+                        {
+                            throw new KbinException(
+                                $"Error while writing data '{s.ToString()}'. See InnerException for more information.",
+                                e);
+                        }
+                    }
+
+                    if (i != requiredBytes)
+                    {
+                        if (writeOptions.StrictMode)
+                            throw new ArgumentOutOfRangeException("Length", builder.Length / type.Size,
+                                "The array length doesn't match the \"__count\" attribute. Expect: " +
+                                arrayCountStr);
+
+                        while (i != requiredBytes)
+                        {
+                            builder.Append(0);
+                            i++;
+                        }
+                    }
+
+                    // force to write as 32bit if is array
+                    if (arrayCountStr != null)
+                        context.DataWriter.Write32BitAligned(builder.AsSpan());
+                    else
+                        context.DataWriter.WriteBytes(builder.AsSpan());
+                }
+                finally
+                {
+                    builder.Dispose();
+                    if (arr != null) ArrayPool<byte>.Shared.Return(arr);
+                }
+            }
+
+            typeStr = null;
+            arrayCountStr = null;
+            holdingValue = "";
+            typeid = 0;
+        }
+
+        if (holdingAttrs.Count > 0)
+        {
+            holdingAttrs.Sort(static (a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
+            // 排序是必要的
+
+            foreach (var attribute in holdingAttrs)
+            {
+                context.NodeWriter.WriteU8(0x2E);
+                context.NodeWriter.WriteString(attribute.Key);
+                context.DataWriter.WriteString(attribute.Value);
+            }
+
+            holdingAttrs.Clear();
+        }
     }
 
     private class WriteContext
