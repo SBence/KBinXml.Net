@@ -35,6 +35,11 @@ internal class DataWriter : BeBinaryWriter
 #endif
     }
 
+    public override void WriteByte(byte singleByte)
+    {
+        Write8BitAligned(singleByte);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override void WriteBytes(ReadOnlySpan<byte> buffer)
     {
@@ -107,10 +112,9 @@ internal class DataWriter : BeBinaryWriter
         byte[]? arr = null;
         Span<byte> span = length <= Constants.MaxStackLength
             ? stackalloc byte[length]
-            : arr = ArrayPool<byte>.Shared.Rent(length);
+            : (arr = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
         try
         {
-            if (arr != null) span = span.Slice(0, length);
             bytes.CopyTo(span);
 
             WriteU32((uint)length);
@@ -131,8 +135,7 @@ internal class DataWriter : BeBinaryWriter
         byte[]? arr = null;
         Span<byte> span = length <= Constants.MaxStackLength
             ? stackalloc byte[length]
-            : arr = ArrayPool<byte>.Shared.Rent(length);
-        if (arr != null) span = span.Slice(0, length);
+            : (arr = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
         try
         {
             HexConverter.TryDecodeFromUtf16(value.AsSpan(), span);
@@ -149,7 +152,7 @@ internal class DataWriter : BeBinaryWriter
     {
         Pad(_pos32);
 
-        WriteBytes(buffer, ref _pos32);
+        DirectWriteBytes(buffer, ref _pos32);
         var left = _pos32 & 3;
         if (left != 0)
         {
@@ -169,7 +172,7 @@ internal class DataWriter : BeBinaryWriter
             _pos32 += 4;
         }
 
-        WriteBytes(buffer, ref _pos16);
+        DirectWriteBytes(buffer, ref _pos16);
         Realign16_8();
     }
 
@@ -183,12 +186,12 @@ internal class DataWriter : BeBinaryWriter
             _pos32 += 4;
         }
 
-        WriteBytes(stackalloc[] { value }, ref _pos8);
+        DirectWriteByte(value, ref _pos8);
         Realign16_8();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void WriteBytes(ReadOnlySpan<byte> buffer, ref int offset)
+    private void DirectWriteBytes(ReadOnlySpan<byte> buffer, ref int offset)
     {
         if (offset == Stream.Length)
         {
@@ -207,6 +210,24 @@ internal class DataWriter : BeBinaryWriter
             // fix the problem if the buffer length is greater than list count
             // but looks safe for kbin algorithm
             //if (offset <= Stream.Length)
+            Stream.Position = pos;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DirectWriteByte(byte singleByte, ref int offset)
+    {
+        if (offset == Stream.Length)
+        {
+            Stream.WriteByte(singleByte);
+            offset += 1;
+        }
+        else
+        {
+            var pos = Stream.Position;
+            Stream.Position = offset;
+            Stream.WriteByte(singleByte);
+            offset += 1;
             Stream.Position = pos;
         }
     }

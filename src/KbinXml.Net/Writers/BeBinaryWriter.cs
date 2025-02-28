@@ -9,9 +9,15 @@ internal class BeBinaryWriter : IDisposable
 {
     protected internal readonly MemoryStream Stream;
 
-    public BeBinaryWriter()
+    public BeBinaryWriter(int capacity = 0)
     {
-        Stream = new MemoryStream(0);
+        Stream = new MemoryStream(capacity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public virtual void WriteByte(byte singleByte)
+    {
+        Stream.WriteByte(singleByte);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -23,7 +29,7 @@ internal class BeBinaryWriter : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual void WriteS8(sbyte value)
     {
-        WriteBytes(stackalloc[] { (byte)value });
+        WriteByte((byte)value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
