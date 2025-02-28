@@ -253,7 +253,11 @@ public static partial class KbinConverter
                     for (var i = 0; i < loopCount; i++)
                     {
                         var subSpan = span.Slice(i * propertyType.Size, propertyType.Size);
+#if NET6_0_OR_GREATER
+                        propertyType.AppendString(ref stringBuilder, subSpan.Span);
+#else
                         stringBuilder.Append(propertyType.GetString(subSpan.Span));
+#endif
                         if (i != loopCount - 1)
                         {
 #if NETCOREAPP3_1_OR_GREATER

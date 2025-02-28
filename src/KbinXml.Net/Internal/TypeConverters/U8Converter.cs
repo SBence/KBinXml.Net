@@ -21,8 +21,16 @@ internal sealed class U8Converter : ITypeConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
-        return bytes[0].ToString();
+        return span[0].ToString();
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        stringBuilder.AppendSpanFormattable(span[0]);
+    }
+#endif
 }

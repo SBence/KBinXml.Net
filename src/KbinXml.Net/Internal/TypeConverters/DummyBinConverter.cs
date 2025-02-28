@@ -19,8 +19,16 @@ internal sealed class DummyBinConverter : ITypeConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
         throw new NotSupportedException("Binary data should not be converted to string.");
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        throw new NotSupportedException("Binary data should not be converted to string.");
+    }
+#endif
 }

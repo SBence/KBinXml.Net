@@ -19,10 +19,18 @@ internal sealed class U64Converter : ITypeConverter
         return BitConverterHelper.WriteBeBytes(ref builder, ParseHelper.ParseUInt64(str, numberStyle));
         // 返回 8（大端字节序写入 8 个字节）
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
-        return BitConverterHelper.ToBeUInt64(bytes).ToString();
+        return BitConverterHelper.ToBeUInt64(span).ToString();
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        stringBuilder.AppendSpanFormattable(BitConverterHelper.ToBeUInt64(span));
+    }
+#endif
 }

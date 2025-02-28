@@ -27,10 +27,18 @@ internal class NodeType
     {
         return Converter.WriteString(ref builder, str);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string GetString(ReadOnlySpan<byte> bytes)
     {
         return Converter.ToString(bytes);
     }
+    
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        Converter.AppendString(ref stringBuilder, span);
+    }
+#endif
 }

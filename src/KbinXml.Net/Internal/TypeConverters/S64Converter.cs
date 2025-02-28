@@ -20,8 +20,16 @@ internal sealed class S64Converter : ITypeConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
-        return BitConverterHelper.ToBeInt64(bytes).ToString();
+        return BitConverterHelper.ToBeInt64(span).ToString();
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        stringBuilder.AppendSpanFormattable(BitConverterHelper.ToBeInt64(span));
+    }
+#endif
 }

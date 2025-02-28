@@ -18,10 +18,18 @@ internal sealed class S8Converter : ITypeConverter
         builder.Append((byte)ParseHelper.ParseSByte(str));
         return 1; // 写入 1 个字节
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
-        return ((sbyte)bytes[0]).ToString();
+        return ((sbyte)span[0]).ToString();
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        stringBuilder.AppendSpanFormattable((sbyte)span[0]);
+    }
+#endif
 }

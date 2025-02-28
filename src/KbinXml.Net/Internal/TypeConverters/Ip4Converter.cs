@@ -32,9 +32,9 @@ internal sealed class Ip4Converter : ITypeConverter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
-        var privateAddress = MemoryMarshal.Read<uint>(bytes);
+        var privateAddress = MemoryMarshal.Read<uint>(span);
         Span<char> dst = stackalloc char[15];
         int charsWritten = IPv4AddressToStringHelper(privateAddress, dst);
         unsafe
@@ -45,6 +45,17 @@ internal sealed class Ip4Converter : ITypeConverter
             }
         }
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        var privateAddress = MemoryMarshal.Read<uint>(span);
+        Span<char> dst = stackalloc char[15];
+        int charsWritten = IPv4AddressToStringHelper(privateAddress, dst);
+        stringBuilder.Append(dst.Slice(0, charsWritten));
+    }
+#endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int IPv4AddressToStringHelper(uint address, Span<char> dst)

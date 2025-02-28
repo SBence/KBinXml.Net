@@ -20,8 +20,16 @@ internal sealed class S16Converter : ITypeConverter
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ToString(ReadOnlySpan<byte> bytes)
+    public string ToString(ReadOnlySpan<byte> span)
     {
-        return BitConverterHelper.ToBeInt16(bytes).ToString();
+        return BitConverterHelper.ToBeInt16(span).ToString();
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)
+    {
+        stringBuilder.AppendSpanFormattable(BitConverterHelper.ToBeInt16(span));
+    }
+#endif
 }
