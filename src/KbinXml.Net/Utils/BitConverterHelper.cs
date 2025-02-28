@@ -58,11 +58,73 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: `foreach` statements?
+    public static int WriteBeBytes(Span<byte> span, ushort value)
+    {
+        BinaryPrimitives.WriteUInt16BigEndian(span, value);
+        return sizeof(ushort);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, short value)
+    {
+        BinaryPrimitives.WriteInt16BigEndian(span, value);
+        return sizeof(short);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, uint value)
+    {
+        BinaryPrimitives.WriteUInt32BigEndian(span, value);
+        return sizeof(uint);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, int value)
+    {
+        BinaryPrimitives.WriteInt32BigEndian(span, value);
+        return sizeof(int);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, ulong value)
+    {
+        BinaryPrimitives.WriteUInt64BigEndian(span, value);
+        return sizeof(ulong);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, long value)
+    {
+        BinaryPrimitives.WriteInt64BigEndian(span, value);
+        return sizeof(long);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, float value)
+    {
+#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
+        BinaryPrimitivesExt.WriteSingleBigEndian(span, value);
+#else
+        BitConverter.GetBytes(value).CopyTo(span);
+        span.Reverse();
+#endif
+        return sizeof(float);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytes(Span<byte> span, double value)
+    {
+        BinaryPrimitivesExt.WriteDoubleBigEndian(span, value);
+        return sizeof(double);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: `foreach` statements?
     public static int WriteBeBytes(ref ValueListBuilder<byte> builder, ushort value)
     {
         Span<byte> span = stackalloc byte[sizeof(ushort)];
         BinaryPrimitives.WriteUInt16BigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
         return span.Length;
     }
 
@@ -71,7 +133,7 @@ internal static class BitConverterHelper
     {
         Span<byte> span = stackalloc byte[sizeof(short)];
         BinaryPrimitives.WriteInt16BigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
         return span.Length;
     }
 
@@ -80,7 +142,7 @@ internal static class BitConverterHelper
     {
         Span<byte> span = stackalloc byte[sizeof(uint)];
         BinaryPrimitives.WriteUInt32BigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
         return span.Length;
     }
 
@@ -89,7 +151,7 @@ internal static class BitConverterHelper
     {
         Span<byte> span = stackalloc byte[sizeof(int)];
         BinaryPrimitives.WriteInt32BigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
         return span.Length;
     }
 
@@ -98,7 +160,7 @@ internal static class BitConverterHelper
     {
         Span<byte> span = stackalloc byte[sizeof(ulong)];
         BinaryPrimitives.WriteUInt64BigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
         return span.Length;
     }
 
@@ -107,7 +169,7 @@ internal static class BitConverterHelper
     {
         Span<byte> span = stackalloc byte[sizeof(long)];
         BinaryPrimitives.WriteInt64BigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
         return span.Length;
     }
 
@@ -117,15 +179,12 @@ internal static class BitConverterHelper
 #if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
         Span<byte> span = stackalloc byte[sizeof(float)];
         BinaryPrimitivesExt.WriteSingleBigEndian(span, value);
-        foreach (var b in span) builder.Append(b);
+        builder.AppendSpan(span);
 #else
         var bytes = BitConverter.GetBytes(value);
         Span<byte> span = bytes;
         span.Reverse();
-        for (var i = 0; i < bytes.Length; i++)
-        {
-            builder.Append(bytes[i]);
-        }
+        builder.AppendSpan(span);
 #endif
         return span.Length;
     }
@@ -135,11 +194,7 @@ internal static class BitConverterHelper
     {
         Span<byte> span = stackalloc byte[sizeof(double)];
         BinaryPrimitivesExt.WriteDoubleBigEndian(span, value);
-        foreach (var b in span)
-        {
-            builder.Append(b);
-        }
-
+        builder.AppendSpan(span);
         return span.Length;
     }
 }

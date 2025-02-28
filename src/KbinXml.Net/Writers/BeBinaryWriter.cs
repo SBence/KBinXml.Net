@@ -36,27 +36,24 @@ internal class BeBinaryWriter : IDisposable
     public virtual void WriteS16(short value)
     {
         Span<byte> span = stackalloc byte[sizeof(short)];
-        var builder = new ValueListBuilder<byte>(span);
-        BitConverterHelper.WriteBeBytes(ref builder, value);
-        WriteBytes(builder.AsSpan());
+        BitConverterHelper.WriteBeBytes(span, value);
+        WriteBytes(span);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual void WriteS32(int value)
     {
         Span<byte> span = stackalloc byte[sizeof(int)];
-        var builder = new ValueListBuilder<byte>(span);
-        BitConverterHelper.WriteBeBytes(ref builder, value);
-        WriteBytes(builder.AsSpan());
+        BitConverterHelper.WriteBeBytes(span, value);
+        WriteBytes(span);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual void WriteS64(long value)
     {
         Span<byte> span = stackalloc byte[sizeof(long)];
-        var builder = new ValueListBuilder<byte>(span);
-        BitConverterHelper.WriteBeBytes(ref builder, value);
-        WriteBytes(builder.AsSpan());
+        BitConverterHelper.WriteBeBytes(span, value);
+        WriteBytes(span);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,27 +66,24 @@ internal class BeBinaryWriter : IDisposable
     public virtual void WriteU16(ushort value)
     {
         Span<byte> span = stackalloc byte[sizeof(ushort)];
-        var builder = new ValueListBuilder<byte>(span);
-        BitConverterHelper.WriteBeBytes(ref builder, value);
-        WriteBytes(builder.AsSpan());
+        BitConverterHelper.WriteBeBytes(span, value);
+        WriteBytes(span);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual void WriteU32(uint value)
     {
         Span<byte> span = stackalloc byte[sizeof(uint)];
-        var builder = new ValueListBuilder<byte>(span);
-        BitConverterHelper.WriteBeBytes(ref builder, value);
-        WriteBytes(builder.AsSpan());
+        BitConverterHelper.WriteBeBytes(span, value);
+        WriteBytes(span);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public virtual void WriteU64(ulong value)
     {
         Span<byte> span = stackalloc byte[sizeof(ulong)];
-        var builder = new ValueListBuilder<byte>(span);
-        BitConverterHelper.WriteBeBytes(ref builder, value);
-        WriteBytes(builder.AsSpan());
+        BitConverterHelper.WriteBeBytes(span, value);
+        WriteBytes(span);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

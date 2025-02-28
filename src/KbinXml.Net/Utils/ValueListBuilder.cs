@@ -48,6 +48,36 @@ public ref struct ValueListBuilder<T> : IDisposable
         _span[pos] = item;
         _pos = pos + 1;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendSpan(scoped ReadOnlySpan<T> items)
+    {
+        int currentPos = _pos;
+        int itemsLength = items.Length;
+    
+        // Check if we need to grow the buffer
+        if (currentPos + itemsLength > _span.Length)
+        {
+            // Calculate the new size ensuring it can fit all the new items
+            int newSize = Math.Max(_span.Length * 2, currentPos + itemsLength);
+            T[] array = ArrayPool<T>.Shared.Rent(newSize);
+        
+            bool success = _span.TryCopyTo(array);
+            Debug.Assert(success);
+        
+            T[]? toReturn = _arrayFromPool;
+            _span = _arrayFromPool = array;
+        
+            if (toReturn != null)
+            {
+                ArrayPool<T>.Shared.Return(toReturn);
+            }
+        }
+    
+        // Copy the items to the span
+        items.CopyTo(_span.Slice(currentPos));
+        _pos = currentPos + itemsLength;
+    }
 
     public ReadOnlySpan<T> AsSpan()
     {
