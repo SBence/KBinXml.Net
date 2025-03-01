@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace KbinXml.Net.Utils;
 
-internal static class ConvertHelper
+public static class ConvertHelper
 {
     internal static readonly NumberFormatInfo UsNumberFormat = new CultureInfo("en-US", false).NumberFormat;
 
@@ -25,7 +25,7 @@ internal static class ConvertHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static NumberStyles GetNumberStyle(ReadOnlySpan<char> str, out ReadOnlySpan<char> hex)
+    public static NumberStyles GetNumberStyle(ReadOnlySpan<char> str, out ReadOnlySpan<char> hex)
     {
         var isSpanHex = str.Length > 2 &&
                         (str[1] == 'x' && str[0] == '0' || str[1] == 'H' && str[0] == '&');

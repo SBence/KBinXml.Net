@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace KbinXml.Net.Utils;
 
-internal static class BitConverterHelper
+public static class BitConverterHelper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort ToBeUInt16(ReadOnlySpan<byte> readBytes) =>
@@ -118,9 +118,8 @@ internal static class BitConverterHelper
         return sizeof(double);
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: `foreach` statements?
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, ushort value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, ushort value)
     {
         Span<byte> span = stackalloc byte[sizeof(ushort)];
         BinaryPrimitives.WriteUInt16BigEndian(span, value);
@@ -129,7 +128,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, short value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, short value)
     {
         Span<byte> span = stackalloc byte[sizeof(short)];
         BinaryPrimitives.WriteInt16BigEndian(span, value);
@@ -138,7 +137,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, uint value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, uint value)
     {
         Span<byte> span = stackalloc byte[sizeof(uint)];
         BinaryPrimitives.WriteUInt32BigEndian(span, value);
@@ -147,7 +146,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, int value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, int value)
     {
         Span<byte> span = stackalloc byte[sizeof(int)];
         BinaryPrimitives.WriteInt32BigEndian(span, value);
@@ -156,7 +155,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, ulong value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, ulong value)
     {
         Span<byte> span = stackalloc byte[sizeof(ulong)];
         BinaryPrimitives.WriteUInt64BigEndian(span, value);
@@ -165,7 +164,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, long value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, long value)
     {
         Span<byte> span = stackalloc byte[sizeof(long)];
         BinaryPrimitives.WriteInt64BigEndian(span, value);
@@ -174,7 +173,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, float value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, float value)
     {
 #if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
         Span<byte> span = stackalloc byte[sizeof(float)];
@@ -190,7 +189,7 @@ internal static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytes(ref ValueListBuilder<byte> builder, double value)
+    internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, double value)
     {
         Span<byte> span = stackalloc byte[sizeof(double)];
         BinaryPrimitivesExt.WriteDoubleBigEndian(span, value);

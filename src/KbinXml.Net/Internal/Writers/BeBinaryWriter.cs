@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Writers;
+namespace KbinXml.Net.Internal.Writers;
 
 internal class BeBinaryWriter : IDisposable
 {

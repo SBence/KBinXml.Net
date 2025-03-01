@@ -2,9 +2,9 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace KbinXml.Net.Internal;
+namespace KbinXml.Net.Utils;
 
-internal static class ParseHelper
+public static class ParseHelper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool ParseBoolean(ReadOnlySpan<char> input)

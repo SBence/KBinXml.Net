@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KbinXml.Net.Utils;
+namespace KbinXml.Net.Internal.Sixbit;
 
 internal static class SixbitHelperSuperOptimized
 {
@@ -34,7 +34,7 @@ internal static class SixbitHelperSuperOptimized
 
                 if (bitOffset <= 2) // 6位全在一个字节内
                 {
-                    outPtr[outputByte] |= (byte)(sixBits << (2 - bitOffset));
+                    outPtr[outputByte] |= (byte)(sixBits << 2 - bitOffset);
                 }
                 else // 6位跨字节
                 {
@@ -43,7 +43,7 @@ internal static class SixbitHelperSuperOptimized
                     outPtr[outputByte] |= (byte)(sixBits >> bitsInSecond);
                     if (outputByte + 1 < output.Length)
                     {
-                        outPtr[outputByte + 1] |= (byte)((sixBits & ((1 << bitsInSecond) - 1)) << (8 - bitsInSecond));
+                        outPtr[outputByte + 1] |= (byte)((sixBits & (1 << bitsInSecond) - 1) << 8 - bitsInSecond);
                     }
                 }
             }
@@ -58,7 +58,7 @@ internal static class SixbitHelperSuperOptimized
     public static unsafe void Decode(ReadOnlySpan<byte> buffer, Span<byte> input)
     {
         if (buffer.IsEmpty) return;
-        int maxOutputLength = (buffer.Length * 8) / 6;
+        int maxOutputLength = buffer.Length * 8 / 6;
         if (input.Length > maxOutputLength)
             throw new ArgumentException("Input buffer capacity exceeds maximum decodable length.", nameof(input));
 
@@ -78,16 +78,16 @@ internal static class SixbitHelperSuperOptimized
                 byte sixBits;
                 if (availableBits >= 6) // 6位全在一个字节内
                 {
-                    sixBits = (byte)((buf[bufferByte] >> (availableBits - 6)) & 0x3F);
+                    sixBits = (byte)(buf[bufferByte] >> availableBits - 6 & 0x3F);
                 }
                 else // 6位跨字节
                 {
                     int bitsFromFirst = availableBits;
                     int bitsFromSecond = 6 - bitsFromFirst;
-                    sixBits = (byte)((buf[bufferByte] & ((1 << bitsFromFirst) - 1)) << bitsFromSecond);
+                    sixBits = (byte)((buf[bufferByte] & (1 << bitsFromFirst) - 1) << bitsFromSecond);
                     if (bufferByte + 1 < buffer.Length)
                     {
-                        sixBits |= (byte)(buf[bufferByte + 1] >> (8 - bitsFromSecond));
+                        sixBits |= (byte)(buf[bufferByte + 1] >> 8 - bitsFromSecond);
                     }
                 }
 

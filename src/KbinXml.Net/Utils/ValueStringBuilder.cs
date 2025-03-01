@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace KbinXml.Net.Utils;
 
-internal ref partial struct ValueStringBuilder : IDisposable
+public ref partial struct ValueStringBuilder : IDisposable
 {
     private char[]? _arrayToReturnToPool;
     private Span<char> _chars;

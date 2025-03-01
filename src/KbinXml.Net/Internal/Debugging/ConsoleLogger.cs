@@ -1,12 +1,11 @@
-﻿#if DEBUG
+﻿#if USELOG
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
-using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Internal.Loggers;
+namespace KbinXml.Net.Internal.Debugging;
 
 internal class ConsoleLogger : IKbinLogger
 {

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Readers;
+namespace KbinXml.Net.Internal.Readers;
 
 internal class DataReader : BeBinaryReader
 {
@@ -23,7 +23,7 @@ internal class DataReader : BeBinaryReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Memory<byte> Read32BitAligned(int count, out int position, out string flag)
     {
-#if DEBUG
+#if USELOG
         position = _position + BaseOffset;
 #else
         position = _position;
@@ -37,7 +37,7 @@ internal class DataReader : BeBinaryReader
         //}
 
         //_position += count;
-        _position += (count + 3) & ~3; // 等价于向上取整到4的倍数
+        _position += count + 3 & ~3; // 等价于向上取整到4的倍数
         return result;
     }
 
@@ -130,7 +130,7 @@ internal class DataReader : BeBinaryReader
     {
         if ((alignedPos & 3) == 0)
         {
-#if DEBUG
+#if USELOG
             if (alignedPos != _position)
             {
                 var pos = alignedPos;
@@ -138,7 +138,7 @@ internal class DataReader : BeBinaryReader
             }
 #endif
             alignedPos = _position;
-#if DEBUG
+#if USELOG
             KbinConverter.Logger.Log(() => $"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
 #endif
             _position += 4;
@@ -148,7 +148,7 @@ internal class DataReader : BeBinaryReader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetAlignedPosition(int alignedPos)
     {
-#if DEBUG
+#if USELOG
         return alignedPos + BaseOffset;
 #else
         return alignedPos;

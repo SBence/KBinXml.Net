@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KbinXml.Net.Utils;
+namespace KbinXml.Net.Internal.Sixbit;
 
 /// <summary>
 /// Provides optimized 6-bit encoding/decoding implementations using unsafe code.
@@ -9,7 +9,7 @@ namespace KbinXml.Net.Utils;
 /// This class contains performance-critical code using pointer operations.
 /// All methods require proper buffer size validation before invocation.
 /// </remarks>
-public static class SixbitHelperOptimized
+internal static class SixbitHelperOptimized
 {
     /// <summary>
     /// Encodes 6-bit values into a packed bitstream.
@@ -42,7 +42,7 @@ public static class SixbitHelperOptimized
                 if (outputBit >= 5)
                 {
                     // 所有6位在同一个输出字节
-                    outPtr[outputByte] |= (byte)(sixBits << (outputBit - 5));
+                    outPtr[outputByte] |= (byte)(sixBits << outputBit - 5);
                 }
                 else
                 {
@@ -51,11 +51,11 @@ public static class SixbitHelperOptimized
                     int remainingBits = 6 - k;
 
                     // 处理第一个字节的高k位
-                    outPtr[outputByte] |= (byte)(sixBits >> (6 - k));
+                    outPtr[outputByte] |= (byte)(sixBits >> 6 - k);
 
                     // 处理第二个字节的低remainingBits位
-                    byte lowPart = (byte)(sixBits & ((1 << remainingBits) - 1));
-                    outPtr[outputByte + 1] |= (byte)(lowPart << (7 - (remainingBits - 1)));
+                    byte lowPart = (byte)(sixBits & (1 << remainingBits) - 1);
+                    outPtr[outputByte + 1] |= (byte)(lowPart << 7 - (remainingBits - 1));
                 }
             }
         }
@@ -90,14 +90,14 @@ public static class SixbitHelperOptimized
                 if (availableBits >= 6)
                 {
                     // 情况1：6位数据在单个buffer字节内
-                    sixBits = (byte)((buf[bufferByte] >> (availableBits - 6)) & 0x3F);
+                    sixBits = (byte)(buf[bufferByte] >> availableBits - 6 & 0x3F);
                 }
                 else
                 {
                     // 情况2：跨两个buffer字节组合数据
                     int remainingBits = 6 - availableBits;
-                    sixBits = (byte)((buf[bufferByte] & ((1 << availableBits) - 1)) << remainingBits);
-                    sixBits |= (byte)(buf[bufferByte + 1] >> (8 - remainingBits));
+                    sixBits = (byte)((buf[bufferByte] & (1 << availableBits) - 1) << remainingBits);
+                    sixBits |= (byte)(buf[bufferByte + 1] >> 8 - remainingBits);
                 }
 
                 // 将6位数据存储到输入缓冲区（高位优先）

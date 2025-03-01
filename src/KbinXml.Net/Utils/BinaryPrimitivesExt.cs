@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace KbinXml.Net.Utils;
 
-internal static class BinaryPrimitivesExt
+public class BinaryPrimitivesExt
 {
 #if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

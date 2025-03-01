@@ -1,8 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
-using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Writers;
+namespace KbinXml.Net.Internal.Writers;
 
 internal class NodeWriter : BeBinaryWriter
 {
@@ -25,7 +24,7 @@ internal class NodeWriter : BeBinaryWriter
         }
         else
         {
-            WriteU8((byte)((value.Length - 1) | (1 << 6)));
+            WriteU8((byte)(value.Length - 1 | 1 << 6));
             WriteBytes(_encoding.GetBytes(value));
         }
     }

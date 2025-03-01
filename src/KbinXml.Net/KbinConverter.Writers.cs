@@ -6,8 +6,8 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using KbinXml.Net.Internal;
+using KbinXml.Net.Internal.Writers;
 using KbinXml.Net.Utils;
-using KbinXml.Net.Writers;
 
 namespace KbinXml.Net;
 

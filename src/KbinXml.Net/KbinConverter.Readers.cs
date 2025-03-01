@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using KbinXml.Net.Internal;
 using KbinXml.Net.Internal.Providers;
-using KbinXml.Net.Readers;
+using KbinXml.Net.Internal.Readers;
 using KbinXml.Net.Utils;
-using KbinXml.Net.Writers;
 
 namespace KbinXml.Net;
 

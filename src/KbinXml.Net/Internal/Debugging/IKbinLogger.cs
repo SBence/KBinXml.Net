@@ -1,14 +1,14 @@
-﻿#if DEBUG
+﻿#if USELOG
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 #endif
 
-namespace KbinXml.Net.Internal.Loggers;
+namespace KbinXml.Net.Internal.Debugging;
 
 internal interface IKbinLogger
 {
-#if DEBUG
+#if USELOG
     void LogSignature(byte signature, long position);
     void LogCompression(byte compressionFlag, long position);
     void LogEncoding(byte encodingFlag, long position);

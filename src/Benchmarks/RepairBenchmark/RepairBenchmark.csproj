@@ -5,6 +5,7 @@
     <TargetFrameworks>net48;net8.0;net9.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
+    <Configurations>Debug;Release;DebugLog</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

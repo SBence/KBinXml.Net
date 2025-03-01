@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Readers;
+namespace KbinXml.Net.Internal.Readers;
 
 internal class BeBinaryReader
 {

@@ -3,23 +3,23 @@ using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using KbinXml.Net.Internal;
+using KbinXml.Net.Utils;
 
 //using SixbitHelperImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
 #if NET6_0_OR_GREATER
-using SixbitHelperEncImpl = KbinXml.Net.Utils.SixbitHelperCoreClrOptimized;
-using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperCoreClrOptimized;
+using SixbitHelperEncImpl = KbinXml.Net.Internal.Sixbit.SixbitHelperCoreClrOptimized;
+using SixbitHelperDecImpl = KbinXml.Net.Internal.Sixbit.SixbitHelperCoreClrOptimized;
 #else
-using SixbitHelperEncImpl = KbinXml.Net.Utils.SixbitHelperSuperOptimized;
-using SixbitHelperDecImpl = KbinXml.Net.Utils.SixbitHelperSuperOptimized;
+using SixbitHelperEncImpl = KbinXml.Net.Internal.Sixbit.SixbitHelperSuperOptimized;
+using SixbitHelperDecImpl = KbinXml.Net.Internal.Sixbit.SixbitHelperSuperOptimized;
 #endif
 
-namespace KbinXml.Net.Utils;
+namespace KbinXml.Net.Internal;
 
 /// <summary>
 /// Provides methods for converting between strings and 6-bit encoded binary data.
 /// </summary>
-public static class SixbitHelper
+internal static class SixbitHelper
 {
     private const string Charset = "0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
     private static readonly byte[] CharsetMapping = new byte[128];
@@ -41,7 +41,7 @@ public static class SixbitHelper
     {
         using var ms = new MemoryStream();
         EncodeCore(input, ms);
-        return ms.ToArray();
+        return ms.GetBuffer();
     }
 
     /// <summary>
@@ -113,8 +113,21 @@ public static class SixbitHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static string GetString(Span<byte> input)
+    private static unsafe string GetString(scoped Span<byte> input)
     {
+#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
+        fixed (byte* inputPtr = input)
+        {
+            return string.Create(input.Length, (nint)inputPtr, (chars, state) =>
+            {
+                var ptr = (byte*)state.ToPointer();
+                for (var i = 0; i < chars.Length; i++)
+                {
+                    chars[i] = CharsetArray[ptr[i]];
+                }
+            });
+        }
+#else
         Span<char> chars = stackalloc char[input.Length];
         ref var inputRef = ref MemoryMarshal.GetReference(input);
         ref var charsRef = ref MemoryMarshal.GetReference(chars);
@@ -122,14 +135,8 @@ public static class SixbitHelper
         for (var i = 0; i < input.Length; i++)
             Unsafe.Add(ref charsRef, i) = CharsetArray[Unsafe.Add(ref inputRef, i)];
 
-#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
-        return new string(chars);
-#else
-        unsafe
-        {
-            fixed (char* p = chars)
-                return new string(p, 0, chars.Length);
-        }
+        fixed (char* p = chars)
+            return new string(p, 0, chars.Length);
 #endif
     }
 }

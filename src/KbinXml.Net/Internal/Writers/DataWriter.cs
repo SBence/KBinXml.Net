@@ -2,10 +2,9 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
-using KbinXml.Net.Internal;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.Writers;
+namespace KbinXml.Net.Internal.Writers;
 
 internal class DataWriter : BeBinaryWriter
 {
@@ -156,7 +155,7 @@ internal class DataWriter : BeBinaryWriter
         var left = _pos32 & 3;
         if (left != 0)
         {
-            _pos32 += (4 - left);
+            _pos32 += 4 - left;
         }
 
         Realign16_8();

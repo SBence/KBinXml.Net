@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using KbinXml.Net.Utils;
+using KbinXml.Net.Internal.Sixbit;
 using Xunit;
 
 namespace GeneralUnitTests

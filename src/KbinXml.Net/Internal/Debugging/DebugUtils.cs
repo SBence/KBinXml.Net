@@ -1,4 +1,4 @@
-﻿#if DEBUG
+﻿#if USELOG
 
 #if NET8_0_OR_GREATER
 using System.Collections.Frozen;
@@ -6,7 +6,7 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace KbinXml.Net.Utils;
+namespace KbinXml.Net.Internal.Debugging;
 
 internal class DebugUtils
 {

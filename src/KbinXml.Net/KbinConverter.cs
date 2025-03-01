@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using KbinXml.Net.Internal;
-using KbinXml.Net.Internal.Loggers;
+using KbinXml.Net.Internal.Debugging;
 
 namespace KbinXml.Net;
 
@@ -11,7 +11,7 @@ namespace KbinXml.Net;
 /// </summary>
 public static partial class KbinConverter
 {
-#if DEBUG
+#if USELOG
     internal static ConsoleLogger Logger { get; } = new ConsoleLogger();
 #else
     internal static NullLogger Logger { get; } = new NullLogger();
