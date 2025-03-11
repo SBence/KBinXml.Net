@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using KbinXml.Net.Internal;
 using KbinXml.Net.Internal.Debugging;
+using Microsoft.IO;
 
 namespace KbinXml.Net;
 
@@ -16,7 +17,7 @@ public static partial class KbinConverter
 #else
     internal static NullLogger Logger { get; } = new NullLogger();
 #endif
-    
+
 #if !NET5_0_OR_GREATER
     private static readonly Type ControlTypeT = typeof(ControlType);
 #endif
@@ -26,6 +27,8 @@ public static partial class KbinConverter
 #else
         new(Enum.GetValues(ControlTypeT).Cast<byte>());
 #endif
+
+    internal static readonly RecyclableMemoryStreamManager RecyclableMemoryStreamManager = new();
 
     internal static string GetActualName(string name, string? repairedPrefix)
     {
