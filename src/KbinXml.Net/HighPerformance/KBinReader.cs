@@ -12,7 +12,7 @@ using KbinXml.Net.Utils;
 
 namespace KbinXml.Net.HighPerformance;
 
-internal static class KBinReader
+public static class KBinReader
 {
 #if USELOG
     internal static ConsoleLogger Logger { get; } = new ConsoleLogger();

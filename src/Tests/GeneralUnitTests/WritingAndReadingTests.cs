@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Xml.Linq;
 using KbinXml.Net;
+using KbinXml.Net.HighPerformance;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -111,13 +112,17 @@ namespace GeneralUnitTests
 
             var bytes = new StableKbin.XmlWriter(xml, Encoding.UTF8).Write();
             var bytes2 = KbinConverter.Write(xml, KnownEncodings.UTF8, new WriteOptions() { StrictMode = false });
+            //var bytes3 = KbinConverter.Write(xml, KnownEncodings.UTF8, new WriteOptions() { StrictMode = false });
             var result = new StableKbin.XmlReader(bytes).ReadLinq().ToString();
             var result2 = KbinConverter.ReadXmlLinq(bytes).ToString();
+            var result3 = KBinReader.ReadXmlLinq(bytes).ToString();
 
             _outputHelper.WriteLine(result);
             _outputHelper.WriteLine(result2);
+            _outputHelper.WriteLine(result3);
             Assert.Equal(bytes, bytes2);
             Assert.Equal(result, result2);
+            Assert.Equal(result, result3);
         }
     }
 }
