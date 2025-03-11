@@ -160,9 +160,14 @@ internal ref partial struct DataReader : IKBinReader
     {
         int actualCount;
         if (count + offset > _span.Length)
+        {
             actualCount = _span.Length - offset;
+        }
         else
+        {
             actualCount = count;
+        }
+
         var slice = _span.Slice(offset, actualCount);
         return slice;
     }

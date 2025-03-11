@@ -30,26 +30,6 @@ public static class KBinReader
         new(Enum.GetValues(ControlTypeT).Cast<byte>());
 #endif
 
-    internal static string GetActualName(string name, string? repairedPrefix)
-    {
-        if (repairedPrefix is not null && name.StartsWith(repairedPrefix, StringComparison.Ordinal))
-        {
-            return name.Substring(repairedPrefix.Length);
-        }
-        else
-        {
-            return name;
-        }
-    }
-
-    internal static string GetRepairedName(string name, string? repairedPrefix)
-    {
-        if (repairedPrefix is null) return name;
-        if (name.Length < 1 || name[0] < 48 || name[0] > 57) return name;
-
-        return repairedPrefix + name;
-    }
-
     /// <summary>
     /// Converts KBin binary data to an <see cref="XDocument"/> representation.
     /// </summary>
@@ -397,7 +377,7 @@ public static class KBinReader
         return readContext;
     }
 
-    private ref struct ReadContext : IDisposable
+    private readonly ref struct ReadContext : IDisposable
     {
         public ReadContext(NodeReader nodeReader, DataReader dataReader, WriterProvider writerProvider,
             KnownEncodings knownEncoding)
@@ -408,10 +388,10 @@ public static class KBinReader
             KnownEncoding = knownEncoding;
         }
 
-        public NodeReader NodeReader { get; set; }
-        public DataReader DataReader { get; set; }
-        public WriterProvider WriterProvider { get; set; }
-        public KnownEncodings KnownEncoding { get; }
+        public readonly NodeReader NodeReader;
+        public readonly DataReader DataReader;
+        public readonly WriterProvider WriterProvider;
+        public readonly KnownEncodings KnownEncoding;
 
         public void Dispose()
         {
