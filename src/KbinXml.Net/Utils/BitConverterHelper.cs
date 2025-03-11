@@ -33,7 +33,9 @@ public static class BitConverterHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ToBeSingle(ReadOnlySpan<byte> value)
     {
-#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
+#if NET8_0_OR_GREATER
+        return BinaryPrimitives.ReadSingleBigEndian(value);
+#elif NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
         return BinaryPrimitivesExt.ReadSingleBigEndian(value);
 #else
         var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(value.Length);
@@ -54,10 +56,14 @@ public static class BitConverterHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static double ToBeDouble(ReadOnlySpan<byte> value)
     {
+#if NET8_0_OR_GREATER
+        return BinaryPrimitives.ReadDoubleBigEndian(value);
+#else
         return BinaryPrimitivesExt.ReadDoubleBigEndian(value);
+#endif
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)] // todo: `foreach` statements?
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteBeBytes(Span<byte> span, ushort value)
     {
         BinaryPrimitives.WriteUInt16BigEndian(span, value);
@@ -102,7 +108,9 @@ public static class BitConverterHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteBeBytes(Span<byte> span, float value)
     {
-#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
+#if NET8_0_OR_GREATER
+        BinaryPrimitives.WriteSingleBigEndian(span, value);
+#elif NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
         BinaryPrimitivesExt.WriteSingleBigEndian(span, value);
 #else
         BitConverter.GetBytes(value).CopyTo(span);
@@ -114,7 +122,11 @@ public static class BitConverterHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteBeBytes(Span<byte> span, double value)
     {
+#if NET8_0_OR_GREATER
+        BinaryPrimitives.WriteDoubleBigEndian(span, value);
+#else
         BinaryPrimitivesExt.WriteDoubleBigEndian(span, value);
+#endif
         return sizeof(double);
     }
 
@@ -175,7 +187,11 @@ public static class BitConverterHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, float value)
     {
-#if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
+#if NET8_0_OR_GREATER
+        Span<byte> span = stackalloc byte[sizeof(float)];
+        BinaryPrimitives.WriteSingleBigEndian(span, value);
+        builder.AppendSpan(span);
+#elif NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
         Span<byte> span = stackalloc byte[sizeof(float)];
         BinaryPrimitivesExt.WriteSingleBigEndian(span, value);
         builder.AppendSpan(span);
@@ -192,7 +208,11 @@ public static class BitConverterHelper
     internal static int WriteBeBytes(ref ValueListBuilder<byte> builder, double value)
     {
         Span<byte> span = stackalloc byte[sizeof(double)];
+#if NET8_0_OR_GREATER
+        BinaryPrimitives.WriteDoubleBigEndian(span, value);
+#else
         BinaryPrimitivesExt.WriteDoubleBigEndian(span, value);
+#endif
         builder.AppendSpan(span);
         return span.Length;
     }
