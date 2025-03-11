@@ -1,9 +1,21 @@
 ﻿namespace KbinXml.Net.HighPerformance;
 
-public ref struct ValueReadResult<T>
+public readonly ref struct ValueReadResult<T>
 {
-    public T Result;
+    public readonly T Value;
 #if USELOG
-    public ReadStatus ReadStatus;
+    public readonly ReadStatus ReadStatus;
 #endif
+
+    public ValueReadResult(T value
+#if USELOG
+        , ReadStatus readStatus
+#endif
+        )
+    {
+        Value = value;
+#if USELOG
+        ReadStatus = readStatus;
+#endif
+    }
 }

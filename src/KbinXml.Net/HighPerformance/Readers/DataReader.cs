@@ -39,12 +39,12 @@ internal ref partial struct DataReader : IKBinReader
 
         var span = ReadBytesSafe(_pos8, 1);
         var result = new SpanReadResult
-        {
-            Span = span,
+        (
+            span
 #if USELOG
-            ReadStatus = new ReadStatus { Flag = "p8", Offset = _pos8, Length = 1 }
+            , new ReadStatus { Flag = "p8", Offset = _pos8, Length = 1 }
 #endif
-        };
+        );
 
         _pos8++;
         return result;
@@ -59,12 +59,12 @@ internal ref partial struct DataReader : IKBinReader
 
         var span = ReadBytesSafe(_pos16, 2);
         var result = new SpanReadResult
-        {
-            Span = span,
+        (
+            span
 #if USELOG
-            ReadStatus = new ReadStatus { Flag = "p16", Offset = _pos16, Length = 2 }
+            , new ReadStatus { Flag = "p16", Offset = _pos16, Length = 2 }
 #endif
-        };
+        );
 
         _pos16 += 2;
         return result;
@@ -75,12 +75,12 @@ internal ref partial struct DataReader : IKBinReader
     {
         var span = ReadBytesSafe(_pos, count);
         var result = new SpanReadResult
-        {
-            Span = span,
+        (
+            span
 #if USELOG
-            ReadStatus = new ReadStatus { Flag = "p32", Offset = _pos, Length = count }
+            , new ReadStatus { Flag = "p32", Offset = _pos, Length = count }
 #endif
-        };
+        );
 
         //var left = count & 3;
         //if (left != 0)
@@ -93,7 +93,6 @@ internal ref partial struct DataReader : IKBinReader
         return result;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe ValueReadResult<string> ReadString(int count)
     {
@@ -102,32 +101,32 @@ internal ref partial struct DataReader : IKBinReader
         if (span.Length == 0)
         {
             return new ValueReadResult<string>
-            {
-                Result = string.Empty,
+            (
+                string.Empty
 #if USELOG
-                ReadStatus = spanResult.ReadStatus
+                , spanResult.ReadStatus
 #endif
-            };
+            );
         }
 
 #if NETCOREAPP3_1_OR_GREATER
         return new ValueReadResult<string>
-        {
-            Result = _encoding.GetString(span),
+        (
+            _encoding.GetString(span)
 #if USELOG
-            ReadStatus = spanResult.ReadStatus
+            , spanResult.ReadStatus
 #endif
-        };
+        );
 #elif NETSTANDARD2_0 || NET46_OR_GREATER
         fixed (byte* p = span)
         {
             return new ValueReadResult<string>
-            {
-                Result = _encoding.GetString(p, span.Length),
+            (
+                _encoding.GetString(p, span.Length)
 #if USELOG
-                ReadStatus = spanResult.ReadStatus
+                , spanResult.ReadStatus
 #endif
-            };
+            );
         }
 #endif
     }
@@ -139,21 +138,21 @@ internal ref partial struct DataReader : IKBinReader
         if (spanResult.Span.Length == 0)
         {
             return new ValueReadResult<string>
-            {
-                Result = string.Empty,
+            (
+                string.Empty
 #if USELOG
-                ReadStatus = spanResult.ReadStatus
+                , spanResult.ReadStatus
 #endif
-            };
+            );
         }
 
         return new ValueReadResult<string>
-        {
-            Result = ConvertHelper.ToHexString(spanResult.Span),
+        (
+            ConvertHelper.ToHexString(spanResult.Span)
 #if USELOG
-            ReadStatus = spanResult.ReadStatus
+            , spanResult.ReadStatus
 #endif
-        };
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

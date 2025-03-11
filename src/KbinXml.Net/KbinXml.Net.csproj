@@ -27,7 +27,7 @@
     <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(Configuration) != 'Debug' ">
+  <PropertyGroup Condition="$(Configuration) == 'Release' ">
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 

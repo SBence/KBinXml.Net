@@ -1,16 +1,55 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using KbinXml.Net.HighPerformance.Readers;
 using KbinXml.Net.Internal;
+using KbinXml.Net.Internal.Debugging;
 using KbinXml.Net.Internal.Providers;
-using KbinXml.Net.Internal.Readers;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net;
+namespace KbinXml.Net.HighPerformance;
 
-public static partial class KbinConverter
+internal static class KBinReader
 {
+#if USELOG
+    internal static ConsoleLogger Logger { get; } = new ConsoleLogger();
+#else
+    internal static NullLogger Logger { get; } = new NullLogger();
+#endif
+
+#if !NET5_0_OR_GREATER
+    private static readonly Type ControlTypeT = typeof(ControlType);
+#endif
+    private static readonly HashSet<byte> ControlTypes =
+#if NET5_0_OR_GREATER
+        new(Enum.GetValues<ControlType>().Cast<byte>());
+#else
+        new(Enum.GetValues(ControlTypeT).Cast<byte>());
+#endif
+
+    internal static string GetActualName(string name, string? repairedPrefix)
+    {
+        if (repairedPrefix is not null && name.StartsWith(repairedPrefix, StringComparison.Ordinal))
+        {
+            return name.Substring(repairedPrefix.Length);
+        }
+        else
+        {
+            return name;
+        }
+    }
+
+    internal static string GetRepairedName(string name, string? repairedPrefix)
+    {
+        if (repairedPrefix is null) return name;
+        if (name.Length < 1 || name[0] < 48 || name[0] > 57) return name;
+
+        return repairedPrefix + name;
+    }
+
     /// <summary>
     /// Converts KBin binary data to an <see cref="XDocument"/> representation.
     /// </summary>
@@ -24,7 +63,7 @@ public static partial class KbinConverter
     /// <para>This method uses LINQ-to-XML for document construction.</para>
     /// <para>If <paramref name="readOptions"/> is null, default read options will be used.</para>
     /// </remarks>
-    public static XDocument ReadXmlLinq(ReadOnlyMemory<byte> sourceBuffer, ReadOptions? readOptions = null)
+    public static XDocument ReadXmlLinq(ReadOnlySpan<byte> sourceBuffer, ReadOptions? readOptions = null)
     {
         readOptions ??= new ReadOptions();
         var xDocument = (XDocument)ReaderImpl(sourceBuffer, e => new XDocumentProvider(e, readOptions), out _);
@@ -38,8 +77,8 @@ public static partial class KbinConverter
     /// <param name="knownEncodings">When this method returns, contains the detected encoding used in the KBin data.</param>
     /// <param name="readOptions">Optional reading configuration options.</param>
     /// <returns>An <see cref="XDocument"/> containing the parsed XML structure.</returns>
-    /// <inheritdoc cref="ReadXmlLinq(ReadOnlyMemory{byte}, ReadOptions?)"/>
-    public static XDocument ReadXmlLinq(ReadOnlyMemory<byte> sourceBuffer, out KnownEncodings knownEncodings,
+    /// <inheritdoc cref="ReadXmlLinq(ReadOnlySpan{byte}, ReadOptions?)"/>
+    public static XDocument ReadXmlLinq(ReadOnlySpan<byte> sourceBuffer, out KnownEncodings knownEncodings,
         ReadOptions? readOptions = null)
     {
         readOptions ??= new ReadOptions();
@@ -54,12 +93,12 @@ public static partial class KbinConverter
     /// <param name="sourceBuffer">The source buffer containing KBin-formatted data.</param>
     /// <param name="readOptions">Optional reading configuration options.</param>
     /// <returns>A byte array containing the XML document in UTF-8 encoding.</returns>
-    /// <inheritdoc cref="ReadXmlLinq(ReadOnlyMemory{byte}, ReadOptions?)"/>
+    /// <inheritdoc cref="ReadXmlLinq(ReadOnlySpan{byte}, ReadOptions?)"/>
     /// <remarks>
     /// The resulting byte array contains standard XML 1.0 formatted data without
     /// Byte Order Mark (BOM) by default.
     /// </remarks>
-    public static byte[] ReadXmlBytes(ReadOnlyMemory<byte> sourceBuffer, ReadOptions? readOptions = null)
+    public static byte[] ReadXmlBytes(ReadOnlySpan<byte> sourceBuffer, ReadOptions? readOptions = null)
     {
         readOptions ??= new ReadOptions();
         var bytes = (byte[])ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions), out _);
@@ -73,8 +112,8 @@ public static partial class KbinConverter
     /// <param name="knownEncodings">When this method returns, contains the detected encoding used in the KBin data.</param>
     /// <param name="readOptions">Optional reading configuration options.</param>
     /// <returns>A byte array containing the XML document in UTF-8 encoding.</returns>
-    /// <inheritdoc cref="ReadXmlBytes(ReadOnlyMemory{byte}, ReadOptions?)"/>
-    public static byte[] ReadXmlBytes(ReadOnlyMemory<byte> sourceBuffer, out KnownEncodings knownEncodings,
+    /// <inheritdoc cref="ReadXmlBytes(ReadOnlySpan{byte}, ReadOptions?)"/>
+    public static byte[] ReadXmlBytes(ReadOnlySpan<byte> sourceBuffer, out KnownEncodings knownEncodings,
         ReadOptions? readOptions = null)
     {
         readOptions ??= new ReadOptions();
@@ -93,7 +132,7 @@ public static partial class KbinConverter
     /// This method uses the classic <see cref="XmlDocument"/> API which implements
     /// the W3C Document Object Model (DOM) Level 1 Core specification.
     /// </remarks>
-    public static XmlDocument ReadXml(ReadOnlyMemory<byte> sourceBuffer, ReadOptions? readOptions = null)
+    public static XmlDocument ReadXml(ReadOnlySpan<byte> sourceBuffer, ReadOptions? readOptions = null)
     {
         readOptions ??= new ReadOptions();
         var xmlDocument = (XmlDocument)ReaderImpl(sourceBuffer, e => new XmlDocumentProvider(e, readOptions),
@@ -108,8 +147,8 @@ public static partial class KbinConverter
     /// <param name="knownEncodings">When this method returns, contains the detected encoding used in the KBin data.</param>
     /// <param name="readOptions">Optional reading configuration options.</param>
     /// <returns>An <see cref="XmlDocument"/> containing the parsed XML structure.</returns>
-    /// <inheritdoc cref="ReadXml(ReadOnlyMemory{byte}, ReadOptions?)"/>
-    public static XmlDocument ReadXml(ReadOnlyMemory<byte> sourceBuffer, out KnownEncodings knownEncodings,
+    /// <inheritdoc cref="ReadXml(ReadOnlySpan{byte}, ReadOptions?)"/>
+    public static XmlDocument ReadXml(ReadOnlySpan<byte> sourceBuffer, out KnownEncodings knownEncodings,
         ReadOptions? readOptions = null)
     {
         readOptions ??= new ReadOptions();
@@ -118,7 +157,7 @@ public static partial class KbinConverter
         return xmlDocument;
     }
 
-    private static object ReaderImpl(ReadOnlyMemory<byte> sourceBuffer, Func<Encoding, WriterProvider> createWriterProvider,
+    private static object ReaderImpl(ReadOnlySpan<byte> sourceBuffer, Func<Encoding, WriterProvider> createWriterProvider,
         out KnownEncodings knownEncoding)
     {
         using var readContext = GetReadContext(sourceBuffer, createWriterProvider);
@@ -133,14 +172,15 @@ public static partial class KbinConverter
         Span<char> charSpan = stackalloc char[Constants.MaxStackLength];
         while (true)
         {
-            var nodeType = nodeReader.ReadU8(out var pos, out _);
+            var nodeTypeResult = nodeReader.ReadU8();
+            var nodeType = nodeTypeResult.Value;
 
             //Array flag is on the second bit
             var array = (nodeType & 0x40) > 0;
             nodeType = (byte)(nodeType & ~0x40);
             if (ControlTypes.Contains(nodeType))
             {
-                Logger.LogNodeControl(nodeType, pos, array);
+                Logger.LogNodeControl(nodeType, nodeTypeResult.Value, array);
 
                 var controlType = (ControlType)nodeType;
                 switch (controlType)
@@ -152,17 +192,29 @@ public static partial class KbinConverter
                             holdValue = null;
                         }
 
-                        var elementName = nodeReader.ReadString(out pos);
-                        Logger.LogStructElement(elementName, pos);
+                        var elementNameResult = nodeReader.ReadString();
+                        var elementName = elementNameResult.Value;
+#if USELOG
+                        Logger.LogStructElement(elementName, elementNameResult.ReadStatus.Offset);
+#endif
                         writerProvider.WriteStartElement(elementName);
                         break;
                     case ControlType.Attribute:
-                        var attr = nodeReader.ReadString(out pos);
-                        Logger.LogAttributeName(attr, pos);
-                        var strLen = dataReader.ReadS32(out pos, out var flag);
-                        Logger.LogAttributeLength(strLen, pos, flag);
-                        var value = dataReader.ReadString(strLen, out pos, out flag);
-                        Logger.LogAttributeValue(value, pos, flag);
+                        var attrResult = nodeReader.ReadString();
+                        var attr = attrResult.Value;
+#if USELOG
+                        Logger.LogAttributeName(attr, attrResult.ReadStatus.Offset);
+#endif
+                        var strLenResult = dataReader.ReadS32();
+                        var strLen = strLenResult.Value;
+#if USELOG
+                        Logger.LogAttributeLength(strLen, strLenResult.ReadStatus.Offset, strLenResult.ReadStatus.Flag);
+#endif
+                        var valueResult = dataReader.ReadString(strLen);
+                        var value = valueResult.Value;
+#if USELOG
+                        Logger.LogAttributeValue(value, valueResult.ReadStatus.Offset, valueResult.ReadStatus.Flag);
+#endif
                         // Size has been written below
                         if (currentType != "bin" || attr != "__size")
                         {
@@ -189,7 +241,7 @@ public static partial class KbinConverter
             }
             else if (NodeTypeFactory.TryGetNodeType(nodeType, out var propertyType))
             {
-                Logger.LogNodeData(propertyType, pos, array);
+                Logger.LogNodeData(propertyType, nodeTypeResult.Value, array);
 
                 if (holdValue != null)
                 {
@@ -197,8 +249,11 @@ public static partial class KbinConverter
                     holdValue = null;
                 }
 
-                var elementName = nodeReader.ReadString(out pos);
-                Logger.LogDataElement(elementName, pos);
+                var elementNameResult = nodeReader.ReadString();
+                var elementName = elementNameResult.Value;
+#if USELOG
+                Logger.LogDataElement(elementName, elementNameResult.ReadStatus.Offset);
+#endif
                 writerProvider.WriteStartElement(elementName);
 
                 writerProvider.WriteStartAttribute("__type");
@@ -210,8 +265,11 @@ public static partial class KbinConverter
                 int arraySize;
                 if (array || propertyType.Name is "str" or "bin")
                 {
-                    arraySize = dataReader.ReadS32(out pos, out var flag); // Total size.
-                    Logger.LogArraySize(arraySize, pos, flag);
+                    var valueReadResult = dataReader.ReadS32();
+                    arraySize = valueReadResult.Value; // Total size.
+#if USELOG
+                    Logger.LogArraySize(arraySize, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
+#endif
                 }
                 else
                 {
@@ -220,16 +278,22 @@ public static partial class KbinConverter
 
                 if (propertyType.Name == "str")
                 {
-                    holdValue = dataReader.ReadString(arraySize, out pos, out var flag);
-                    Logger.LogStringValue(holdValue, pos, flag);
+                    var valueReadResult = dataReader.ReadString(arraySize);
+                    holdValue = valueReadResult.Value;
+#if USELOG
+                    Logger.LogStringValue(holdValue, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
+#endif
                 }
                 else if (propertyType.Name == "bin")
                 {
                     writerProvider.WriteStartAttribute("__size");
                     writerProvider.WriteAttributeValue(arraySize.ToString());
                     writerProvider.WriteEndAttribute();
-                    holdValue = dataReader.ReadBinary(arraySize, out pos, out var flag);
-                    Logger.LogBinaryValue(holdValue, pos, flag);
+                    var valueReadResult = dataReader.ReadBinary(arraySize);
+                    holdValue = valueReadResult.Value;
+#if USELOG
+                    Logger.LogBinaryValue(holdValue, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
+#endif
                 }
                 else
                 {
@@ -242,18 +306,19 @@ public static partial class KbinConverter
                     }
 
                     // force to read as 32bit if is array
-                    var span = array
-                        ? dataReader.Read32BitAligned(arraySize, out pos, out var flag)
-                        : dataReader.ReadBytes(arraySize, out pos, out flag);
+                    var spanResult = array
+                        ? dataReader.ReadBytes32BitAligned(arraySize)
+                        : dataReader.ReadBytes(arraySize);
+                    var span = spanResult.Span;
                     var stringBuilder = new ValueStringBuilder(charSpan);
                     var loopCount = arraySize / propertyType.Size;
                     for (var i = 0; i < loopCount; i++)
                     {
                         var subSpan = span.Slice(i * propertyType.Size, propertyType.Size);
 #if NET6_0_OR_GREATER
-                        propertyType.AppendString(ref stringBuilder, subSpan.Span);
+                        propertyType.AppendString(ref stringBuilder, subSpan);
 #else
-                        stringBuilder.Append(propertyType.GetString(subSpan.Span));
+                        stringBuilder.Append(propertyType.GetString(subSpan));
 #endif
                         if (i != loopCount - 1)
                         {
@@ -266,7 +331,9 @@ public static partial class KbinConverter
                     }
 
                     holdValue = stringBuilder.ToString();
-                    Logger.LogArrayValue(holdValue, pos, flag);
+#if USELOG
+                    Logger.LogArrayValue(holdValue, spanResult.ReadStatus.Offset, spanResult.ReadStatus.Flag);
+#endif
                 }
             }
             else
@@ -276,43 +343,53 @@ public static partial class KbinConverter
         }
     }
 
-    private static ReadContext GetReadContext(ReadOnlyMemory<byte> sourceBuffer,
+    private static ReadContext GetReadContext(ReadOnlySpan<byte> sourceBuffer,
         Func<Encoding, WriterProvider> createWriterProvider)
     {
         //Read header section.
-        int pos;
-        var binaryBuffer = new BeBinaryReader(sourceBuffer);
-        var signature = binaryBuffer.ReadU8(out pos, out _);
-        Logger.LogSignature(signature, pos);
 
-        var compressionFlag = binaryBuffer.ReadU8(out pos, out _);
-        Logger.LogCompression(compressionFlag, pos);
+        var binaryBuffer = new BigEndianReader(sourceBuffer);
+        var signature = binaryBuffer.ReadU8();
+#if USELOG
+        Logger.LogSignature(signature.Value, signature.ReadStatus.Offset);
+#endif
 
-        var encodingFlag = binaryBuffer.ReadU8(out pos, out _);
-        Logger.LogEncoding(encodingFlag, pos);
-        var encodingFlagNot = binaryBuffer.ReadU8(out pos, out _);
-        Logger.LogEncodingNot(encodingFlagNot, pos);
+        var compressionFlag = binaryBuffer.ReadU8();
+#if USELOG
+        Logger.LogCompression(compressionFlag.Value, compressionFlag.ReadStatus.Offset);
+#endif
+
+        var encodingFlag = binaryBuffer.ReadU8();
+#if USELOG
+        Logger.LogEncoding(encodingFlag.Value, encodingFlag.ReadStatus.Offset);
+#endif
+        var encodingFlagNot = binaryBuffer.ReadU8();
+#if USELOG
+        Logger.LogEncodingNot(encodingFlagNot.Value, encodingFlagNot.ReadStatus.Offset);
+#endif
 
         //Verify magic.
-        if (signature != 0xA0)
-            throw new KbinException($"Signature was invalid. 0x{signature:X2} != 0xA0");
+        if (signature.Value != 0xA0)
+            throw new KbinException($"Signature was invalid. 0x{signature.Value:X2} != 0xA0");
 
         //Encoding flag should be an inverse of the fourth byte.
-        if ((byte)~encodingFlag != encodingFlagNot)
+        if ((byte)~encodingFlag.Value != encodingFlagNot.Value)
             throw new KbinException(
-                $"Third byte was not an inverse of the fourth. {~encodingFlag} != {encodingFlagNot}");
+                $"Third byte was not an inverse of the fourth. {~encodingFlag.Value} != {encodingFlagNot.Value}");
 
-        var compressed = compressionFlag == 0x42;
-        var encoding = EncodingDictionary.EncodingMap[encodingFlag];
+        var compressed = compressionFlag.Value == 0x42;
+        var encoding = EncodingDictionary.EncodingMap[encodingFlag.Value];
 
         //Get buffer lengths and load.
-        var nodeLength = binaryBuffer.ReadS32(out pos, out _);
-        Logger.LogNodeLength(nodeLength, pos);
-        var nodeReader = new NodeReader(sourceBuffer.Slice(8, nodeLength), 8, compressed, encoding);
+        var nodeLength = binaryBuffer.ReadS32();
+#if USELOG
+        Logger.LogNodeLength(nodeLength.Value, nodeLength.ReadStatus.Offset);
+#endif
+        var nodeReader = new NodeReader(sourceBuffer.Slice(8, nodeLength.Value), encoding, compressed);
 
-        var dataLength = BitConverterHelper.ToBeInt32(sourceBuffer.Slice(nodeLength + 8, 4).Span);
-        Logger.LogDataLength(dataLength, pos);
-        var dataReader = new DataReader(sourceBuffer.Slice(nodeLength + 12, dataLength), nodeLength + 12, encoding);
+        var dataLength = BitConverterHelper.ToBeInt32(sourceBuffer.Slice(nodeLength.Value + 8, 4));
+        Logger.LogDataLength(dataLength, nodeLength.Value + 12);
+        var dataReader = new DataReader(sourceBuffer.Slice(nodeLength.Value + 12, dataLength), encoding);
 
         var readProvider = createWriterProvider(encoding);
 
@@ -320,7 +397,7 @@ public static partial class KbinConverter
         return readContext;
     }
 
-    private class ReadContext : IDisposable
+    private ref struct ReadContext : IDisposable
     {
         public ReadContext(NodeReader nodeReader, DataReader dataReader, WriterProvider writerProvider,
             KnownEncodings knownEncoding)

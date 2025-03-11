@@ -2,10 +2,22 @@
 
 namespace KbinXml.Net.HighPerformance;
 
-public ref struct SpanReadResult
+public readonly ref struct SpanReadResult
 {
-    public ReadOnlySpan<byte> Span { get; set; }
+    public readonly ReadOnlySpan<byte> Span;
 #if USELOG
-    public ReadStatus ReadStatus { get; set; }
+    public readonly ReadStatus ReadStatus;
 #endif
+
+    public SpanReadResult(ReadOnlySpan<byte> span
+#if USELOG
+        , ReadStatus readStatus
+#endif
+    )
+    {
+        Span = span;
+#if USELOG
+        ReadStatus = readStatus;
+#endif
+    }
 }

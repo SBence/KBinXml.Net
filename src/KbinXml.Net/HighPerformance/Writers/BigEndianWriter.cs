@@ -5,7 +5,7 @@ using Microsoft.IO;
 
 namespace KbinXml.Net.HighPerformance.Writers;
 
-internal readonly ref struct BigEndianWriter
+internal readonly ref struct BigEndianWriter : IKBinWriter, IDisposable
 {
     internal readonly RecyclableMemoryStream Stream;
 
@@ -35,7 +35,7 @@ internal readonly ref struct BigEndianWriter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU8(byte value)
     {
-        Stream.WriteByte(value);
+        WriteByte(value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

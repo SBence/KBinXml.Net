@@ -11,6 +11,8 @@ internal ref partial struct NodeReader : IKBinReader
     private readonly Encoding _encoding;
     private readonly bool _compressed;
 
+    private int _position;
+
     public NodeReader(ReadOnlySpan<byte> span, Encoding encoding, bool compressed)
     {
         _span = span;
@@ -18,13 +20,11 @@ internal ref partial struct NodeReader : IKBinReader
         _encoding = encoding;
     }
 
-    public int Position { get; private set; }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValueReadResult<string> ReadString()
     {
         var result = ReadU8();
-        var length = result.Result;
+        var length = result.Value;
         return _compressed
             ? ReadCompressedString(length)
             : ReadUncompressedString(length);
@@ -36,12 +36,12 @@ internal ref partial struct NodeReader : IKBinReader
         var spanResult = ReadBytes((int)Math.Ceiling(length * 6 / 8.0));
         var readString = SixbitHelper.Decode(spanResult.Span, length);
         return new ValueReadResult<string>
-        {
-            Result = readString,
+        (
+            readString
 #if USELOG
-            ReadStatus = spanResult.ReadStatus
+            , spanResult.ReadStatus
 #endif
-        };
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,22 +51,22 @@ internal ref partial struct NodeReader : IKBinReader
 
 #if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
         return new ValueReadResult<string>
-        {
-            Result = _encoding.GetString(readSpanResult.Span),
+        (
+            _encoding.GetString(readSpanResult.Span)
 #if USELOG
-            ReadStatus = readSpanResult.ReadStatus
+            , readSpanResult.ReadStatus
 #endif
-        };
+        );
 #else
         fixed (byte* p = readSpanResult.Span)
         {
             return new ValueReadResult<string>
-            {
-                Result = _encoding.GetString(p, readSpanResult.Span.Length),
+            (
+                _encoding.GetString(p, readSpanResult.Span.Length)
 #if USELOG
-                ReadStatus = readSpanResult.ReadStatus
+                , readSpanResult.ReadStatus
 #endif
-            };
+            );
         }
 #endif
     }
