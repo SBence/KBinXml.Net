@@ -11,7 +11,7 @@ internal class DataReader : BeBinaryReader
     private int _pos16;
     private int _pos8;
 
-    public DataReader(Memory<byte> buffer, int baseOffset, Encoding encoding) : base(buffer, baseOffset)
+    public DataReader(ReadOnlyMemory<byte> buffer, int baseOffset, Encoding encoding) : base(buffer, baseOffset)
     {
         _encoding = encoding;
     }
@@ -21,7 +21,7 @@ internal class DataReader : BeBinaryReader
     //public int Position8 => _pos8 + BaseOffset;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Memory<byte> Read32BitAligned(int count, out int position, out string flag)
+    public ReadOnlyMemory<byte> Read32BitAligned(int count, out int position, out string flag)
     {
 #if USELOG
         position = _position + BaseOffset;
@@ -42,7 +42,7 @@ internal class DataReader : BeBinaryReader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Memory<byte> Read16BitAligned(out int position, out string flag)
+    public ReadOnlyMemory<byte> Read16BitAligned(out int position, out string flag)
     {
         flag = "p16";
         // Realign before read.
@@ -57,7 +57,7 @@ internal class DataReader : BeBinaryReader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Memory<byte> Read8BitAligned(out int position, out string flag)
+    public ReadOnlyMemory<byte> Read8BitAligned(out int position, out string flag)
     {
         flag = "p8";
         // Realign before read.
@@ -73,7 +73,7 @@ internal class DataReader : BeBinaryReader
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override Memory<byte> ReadBytes(int count, out int position, out string flag)
+    public override ReadOnlyMemory<byte> ReadBytes(int count, out int position, out string flag)
     {
         return count switch
         {
@@ -114,7 +114,7 @@ internal class DataReader : BeBinaryReader
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Memory<byte> ReadBytes(int offset, int count)
+    private ReadOnlyMemory<byte> ReadBytes(int offset, int count)
     {
         int actualCount;
         if (count + offset > Buffer.Length)
