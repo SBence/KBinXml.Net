@@ -135,4 +135,10 @@ internal static class NodeTypeFactory
     {
         return ReverseTypeMap[name];
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetNodeTypeId(string name, out byte typeId)
+    {
+        return ReverseTypeMap.TryGetValue(name, out typeId);
+    }
 }

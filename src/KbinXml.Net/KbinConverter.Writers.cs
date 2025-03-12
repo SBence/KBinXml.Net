@@ -161,7 +161,12 @@ public static partial class KbinConverter
                     }
                     else
                     {
-                        context.TypeId = NodeTypeFactory.GetNodeTypeId(context.TypeStr); // 内部为字典操作
+                        if (!NodeTypeFactory.TryGetNodeTypeId(context.TypeStr, out var typeId))// 内部为字典操作
+                        {
+                            throw new KbinTypeNotFoundException(context.TypeStr);
+                        }
+
+                        context.TypeId = typeId;
                         if (context.ArrayCountStr != null)
                             context.NodeWriter.WriteU8((byte)(context.TypeId | 0x40));
                         else
@@ -377,9 +382,7 @@ public static partial class KbinConverter
                     if (bytesWritten == requiredBytes)
                     {
                         if (WriteOptions.StrictMode)
-                            throw new ArgumentOutOfRangeException("Length", HoldingValue.Split(' ').Length,
-                                "The array length doesn't match the \"__count\" attribute. Expect: " +
-                                ArrayCountStr);
+                            throw new KbinArrayCountMissMatchException(ArrayCountStr, HoldingValue.Split(' ').Length);
                         break;
                     }
 
@@ -405,8 +408,7 @@ public static partial class KbinConverter
             {
                 if (WriteOptions.StrictMode)
                 {
-                    throw new ArgumentOutOfRangeException("Length", builder.Length / type.Size,
-                        $"The array length doesn't match the \"__count\" attribute. Expect: {ArrayCountStr}");
+                    throw new KbinArrayCountMissMatchException(ArrayCountStr, builder.Length / type.Size);
                 }
 
                 // 填充剩余字节
