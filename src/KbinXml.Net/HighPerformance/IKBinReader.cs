@@ -18,7 +18,7 @@ internal interface IKBinReader
 internal interface IKBinWriter
 {
     public void WriteByte(byte singleByte);
-    public void WriteBytes(scoped ReadOnlySpan<byte> buffer);
+    public void WriteBytes(ReadOnlySpan<byte> buffer);
     public void WriteS8(sbyte value);
     public void WriteU8(byte value);
     public void WriteS16(short value);

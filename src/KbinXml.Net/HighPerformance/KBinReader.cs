@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -102,12 +103,48 @@ public static class KBinReader
     }
 
     /// <summary>
+    /// Converts KBin binary data to raw XML bytes.
+    /// </summary>
+    /// <param name="sourceBuffer">The source buffer containing KBin-formatted data.</param>
+    /// <param name="readOptions">Optional reading configuration options.</param>
+    /// <returns>A MemoryStream containing the XML document in UTF-8 encoding.</returns>
+    /// <inheritdoc cref="ReadXmlLinq(ReadOnlySpan{byte}, ReadOptions?)"/>
+    /// <remarks>
+    /// The resulting byte array contains standard XML 1.0 formatted data without
+    /// Byte Order Mark (BOM) by default.
+    /// </remarks>
+    public static MemoryStream GetXmlStream(ReadOnlySpan<byte> sourceBuffer, ReadOptions? readOptions = null)
+    {
+        readOptions ??= new ReadOptions();
+        var bytes = (MemoryStream)ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions, true),
+            out _);
+        return bytes;
+    }
+
+    /// <summary>
+    /// Converts KBin binary data to raw XML bytes and outputs the detected encoding.
+    /// </summary>
+    /// <param name="sourceBuffer">The source buffer containing KBin-formatted data.</param>
+    /// <param name="knownEncodings">When this method returns, contains the detected encoding used in the KBin data.</param>
+    /// <param name="readOptions">Optional reading configuration options.</param>
+    /// <returns>A MemoryStream containing the XML document in UTF-8 encoding.</returns>
+    /// <inheritdoc cref="ReadXmlBytes(ReadOnlySpan{byte}, ReadOptions?)"/>
+    public static MemoryStream GetXmlStream(ReadOnlySpan<byte> sourceBuffer, out KnownEncodings knownEncodings,
+        ReadOptions? readOptions = null)
+    {
+        readOptions ??= new ReadOptions();
+        var bytes = (MemoryStream)ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions, true),
+            out knownEncodings);
+        return bytes;
+    }
+
+    /// <summary>
     /// Converts KBin binary data to an <see cref="XmlDocument"/> representation.
     /// </summary>
     /// <param name="sourceBuffer">The source buffer containing KBin-formatted data.</param>
     /// <param name="readOptions">Optional reading configuration options.</param>
     /// <returns>An <see cref="XmlDocument"/> containing the parsed XML structure.</returns>
-    /// <inheritdoc cref="ReadXmlLinq(ReadOnlyMemory{byte}, ReadOptions?)"/>
+    /// <inheritdoc cref="ReadXmlLinq(ReadOnlySpan{byte}, ReadOptions?)"/>
     /// <remarks>
     /// This method uses the classic <see cref="XmlDocument"/> API which implements
     /// the W3C Document Object Model (DOM) Level 1 Core specification.
@@ -140,194 +177,52 @@ public static class KBinReader
     private static object ReaderImpl(ReadOnlySpan<byte> sourceBuffer, Func<Encoding, WriterProvider> createWriterProvider,
         out KnownEncodings knownEncoding)
     {
-        using var readContext = GetReadContext(sourceBuffer, createWriterProvider);
-        knownEncoding = readContext.KnownEncoding;
-        var writerProvider = readContext.WriterProvider;
-        var nodeReader = readContext.NodeReader;
-        var dataReader = readContext.DataReader;
-
-        writerProvider.WriteStartDocument();
-        string? currentType = null;
-        string? holdValue = null;
-        Span<char> charSpan = stackalloc char[Constants.MaxStackLength];
-        while (true)
+        var readContext = GetReadContext(sourceBuffer, createWriterProvider);
+        try
         {
-            var nodeTypeResult = nodeReader.ReadU8();
-            var nodeType = nodeTypeResult.Value;
-
-            //Array flag is on the second bit
-            var array = (nodeType & 0x40) > 0;
-            nodeType = (byte)(nodeType & ~0x40);
-            if (ControlTypes.Contains(nodeType))
+            knownEncoding = readContext.KnownEncoding;
+            readContext.WriterProvider.WriteStartDocument();
+            while (true)
             {
-                Logger.LogNodeControl(nodeType, nodeTypeResult.Value, array);
+                var nodeTypeResult = readContext.NodeReader.ReadU8();
+                var bNodeType = nodeTypeResult.Value;
 
-                var controlType = (ControlType)nodeType;
-                switch (controlType)
+                //Array flag is on the second bit
+                var isArray = (bNodeType & 0x40) > 0;
+                bNodeType = (byte)(bNodeType & ~0x40);
+                if (ControlTypes.Contains(bNodeType))
                 {
-                    case ControlType.NodeStart:
-                        if (holdValue != null)
-                        {
-                            writerProvider.WriteElementValue(holdValue);
-                            holdValue = null;
-                        }
-
-                        var elementNameResult = nodeReader.ReadString();
-                        var elementName = elementNameResult.Value;
 #if USELOG
-                        Logger.LogStructElement(elementName, elementNameResult.ReadStatus.Offset);
+                    Logger.LogNodeControl(bNodeType, nodeTypeResult.Value, isArray);
 #endif
-                        writerProvider.WriteStartElement(elementName);
-                        break;
-                    case ControlType.Attribute:
-                        var attrResult = nodeReader.ReadString();
-                        var attr = attrResult.Value;
-#if USELOG
-                        Logger.LogAttributeName(attr, attrResult.ReadStatus.Offset);
-#endif
-                        var strLenResult = dataReader.ReadS32();
-                        var strLen = strLenResult.Value;
-#if USELOG
-                        Logger.LogAttributeLength(strLen, strLenResult.ReadStatus.Offset, strLenResult.ReadStatus.Flag);
-#endif
-                        var valueResult = dataReader.ReadString(strLen);
-                        var value = valueResult.Value;
-#if USELOG
-                        Logger.LogAttributeValue(value, valueResult.ReadStatus.Offset, valueResult.ReadStatus.Flag);
-#endif
-                        // Size has been written below
-                        if (currentType != "bin" || attr != "__size")
-                        {
-                            writerProvider.WriteStartAttribute(attr);
-                            writerProvider.WriteAttributeValue(value);
-                            writerProvider.WriteEndAttribute();
-                        }
-
-                        break;
-                    case ControlType.NodeEnd:
-                        if (holdValue != null)
-                        {
-                            writerProvider.WriteElementValue(holdValue);
-                            holdValue = null;
-                        }
-
-                        writerProvider.WriteEndElement();
-                        break;
-                    case ControlType.FileEnd:
-                        return writerProvider.GetResult();
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    var result = readContext.ProcessControlNode(bNodeType);
+                    if (result != null)
+                    {
+                        return result;
+                    }
                 }
-            }
-            else if (NodeTypeFactory.TryGetNodeType(nodeType, out var propertyType))
-            {
-                Logger.LogNodeData(propertyType, nodeTypeResult.Value, array);
-
-                if (holdValue != null)
+                else if (NodeTypeFactory.TryGetNodeType(bNodeType, out var propertyType))
                 {
-                    writerProvider.WriteElementValue(holdValue);
-                    holdValue = null;
-                }
-
-                var elementNameResult = nodeReader.ReadString();
-                var elementName = elementNameResult.Value;
 #if USELOG
-                Logger.LogDataElement(elementName, elementNameResult.ReadStatus.Offset);
+                    Logger.LogNodeData(propertyType, nodeTypeResult.Value, isArray);
 #endif
-                writerProvider.WriteStartElement(elementName);
-
-                writerProvider.WriteStartAttribute("__type");
-                writerProvider.WriteAttributeValue(propertyType.Name);
-                writerProvider.WriteEndAttribute();
-
-                currentType = propertyType.Name;
-
-                int arraySize;
-                if (array || propertyType.Name is "str" or "bin")
-                {
-                    var valueReadResult = dataReader.ReadS32();
-                    arraySize = valueReadResult.Value; // Total size.
-#if USELOG
-                    Logger.LogArraySize(arraySize, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
-#endif
+                    readContext.ProcessDataNode(propertyType, isArray);
                 }
                 else
                 {
-                    arraySize = propertyType.Size * propertyType.Count;
-                }
-
-                if (propertyType.Name == "str")
-                {
-                    var valueReadResult = dataReader.ReadString(arraySize);
-                    holdValue = valueReadResult.Value;
-#if USELOG
-                    Logger.LogStringValue(holdValue, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
-#endif
-                }
-                else if (propertyType.Name == "bin")
-                {
-                    writerProvider.WriteStartAttribute("__size");
-                    writerProvider.WriteAttributeValue(arraySize.ToString());
-                    writerProvider.WriteEndAttribute();
-                    var valueReadResult = dataReader.ReadBinary(arraySize);
-                    holdValue = valueReadResult.Value;
-#if USELOG
-                    Logger.LogBinaryValue(holdValue, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
-#endif
-                }
-                else
-                {
-                    if (array)
-                    {
-                        var size = (arraySize / (propertyType.Size * propertyType.Count)).ToString();
-                        writerProvider.WriteStartAttribute("__count");
-                        writerProvider.WriteAttributeValue(size);
-                        writerProvider.WriteEndAttribute();
-                    }
-
-                    // force to read as 32bit if is array
-                    var spanResult = array
-                        ? dataReader.ReadBytes32BitAligned(arraySize)
-                        : dataReader.ReadBytes(arraySize);
-                    var span = spanResult.Span;
-                    var stringBuilder = new ValueStringBuilder(charSpan);
-                    var loopCount = arraySize / propertyType.Size;
-                    for (var i = 0; i < loopCount; i++)
-                    {
-                        var subSpan = span.Slice(i * propertyType.Size, propertyType.Size);
-#if NET6_0_OR_GREATER
-                        propertyType.AppendString(ref stringBuilder, subSpan);
-#else
-                        stringBuilder.Append(propertyType.GetString(subSpan));
-#endif
-                        if (i != loopCount - 1)
-                        {
-#if NETCOREAPP3_1_OR_GREATER
-                            stringBuilder.Append(' ');
-#else
-                            stringBuilder.Append(" ");
-#endif
-                        }
-                    }
-
-                    holdValue = stringBuilder.ToString();
-#if USELOG
-                    Logger.LogArrayValue(holdValue, spanResult.ReadStatus.Offset, spanResult.ReadStatus.Flag);
-#endif
+                    throw new KbinException($"Unknown node type: {bNodeType}");
                 }
             }
-            else
-            {
-                throw new KbinException($"Unknown node type: {nodeType}");
-            }
+        }
+        finally
+        {
+            readContext.Dispose();
         }
     }
 
-    private static ReadContext GetReadContext(ReadOnlySpan<byte> sourceBuffer,
-        Func<Encoding, WriterProvider> createWriterProvider)
+    private static ReadContext GetReadContext(ReadOnlySpan<byte> sourceBuffer, Func<Encoding, WriterProvider> createWriterProvider)
     {
         //Read header section.
-
         var binaryBuffer = new BigEndianReader(sourceBuffer);
         var signature = binaryBuffer.ReadU8();
 #if USELOG
@@ -377,8 +272,16 @@ public static class KBinReader
         return readContext;
     }
 
-    private readonly ref struct ReadContext : IDisposable
+    private ref struct ReadContext : IDisposable
     {
+        public readonly WriterProvider WriterProvider;
+        public readonly KnownEncodings KnownEncoding;
+
+        public NodeReader NodeReader;
+        public DataReader DataReader;
+        public string? CurrentType;
+        public string? HoldValue;
+
         public ReadContext(NodeReader nodeReader, DataReader dataReader, WriterProvider writerProvider,
             KnownEncodings knownEncoding)
         {
@@ -388,10 +291,195 @@ public static class KBinReader
             KnownEncoding = knownEncoding;
         }
 
-        public readonly NodeReader NodeReader;
-        public readonly DataReader DataReader;
-        public readonly WriterProvider WriterProvider;
-        public readonly KnownEncodings KnownEncoding;
+        public object? ProcessControlNode(byte bNodeType)
+        {
+            var controlType = (ControlType)bNodeType;
+            switch (controlType)
+            {
+                case ControlType.NodeStart:
+                    ProcessNodeStart();
+                    break;
+                case ControlType.Attribute:
+                    ProcessAttribute();
+                    break;
+                case ControlType.NodeEnd:
+                    if (HoldValue != null)
+                    {
+                        WriterProvider.WriteElementValue(HoldValue);
+                        HoldValue = null;
+                    }
+
+                    WriterProvider.WriteEndElement();
+                    break;
+                case ControlType.FileEnd:
+                    return WriterProvider.GetResult();
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return null;
+        }
+
+        public void ProcessDataNode(NodeType? propertyType, bool isArray)
+        {
+            if (HoldValue != null)
+            {
+                WriterProvider.WriteElementValue(HoldValue);
+                HoldValue = null;
+            }
+
+            var elementNameResult = NodeReader.ReadString();
+            var elementName = elementNameResult.Value;
+#if USELOG
+            Logger.LogDataElement(elementName, elementNameResult.ReadStatus.Offset);
+#endif
+            WriterProvider.WriteStartElement(elementName);
+
+            WriterProvider.WriteStartAttribute("__type");
+            WriterProvider.WriteAttributeValue(propertyType.Name);
+            WriterProvider.WriteEndAttribute();
+
+            CurrentType = propertyType.Name;
+
+            var arraySize = GetArraySize(propertyType, isArray);
+            if (propertyType.Name == "str")
+            {
+                ProcessStringType(arraySize);
+            }
+            else if (propertyType.Name == "bin")
+            {
+                ProcessBinaryType(arraySize);
+            }
+            else
+            {
+                ProcessPrimitiveType(propertyType, isArray, arraySize);
+            }
+        }
+
+        private void ProcessNodeStart()
+        {
+            if (HoldValue != null)
+            {
+                WriterProvider.WriteElementValue(HoldValue);
+                HoldValue = null;
+            }
+
+            var elementNameResult = NodeReader.ReadString();
+            var elementName = elementNameResult.Value;
+#if USELOG
+            Logger.LogStructElement(elementName, elementNameResult.ReadStatus.Offset);
+#endif
+            WriterProvider.WriteStartElement(elementName);
+        }
+
+        private void ProcessAttribute()
+        {
+            var attrResult = NodeReader.ReadString();
+            var attr = attrResult.Value;
+#if USELOG
+            Logger.LogAttributeName(attr, attrResult.ReadStatus.Offset);
+#endif
+            var strLenResult = DataReader.ReadS32();
+            var strLen = strLenResult.Value;
+#if USELOG
+            Logger.LogAttributeLength(strLen, strLenResult.ReadStatus.Offset, strLenResult.ReadStatus.Flag);
+#endif
+            var valueResult = DataReader.ReadString(strLen);
+            var value = valueResult.Value;
+#if USELOG
+            Logger.LogAttributeValue(value, valueResult.ReadStatus.Offset, valueResult.ReadStatus.Flag);
+#endif
+            // Size has been written below
+            if (CurrentType != "bin" || attr != "__size")
+            {
+                WriterProvider.WriteStartAttribute(attr);
+                WriterProvider.WriteAttributeValue(value);
+                WriterProvider.WriteEndAttribute();
+            }
+        }
+
+        private void ProcessStringType(int arraySize)
+        {
+            var valueReadResult = DataReader.ReadString(arraySize);
+            HoldValue = valueReadResult.Value;
+#if USELOG
+            Logger.LogStringValue(HoldValue, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
+#endif
+        }
+
+        private void ProcessBinaryType(int arraySize)
+        {
+            WriterProvider.WriteStartAttribute("__size");
+            WriterProvider.WriteAttributeValue(arraySize.ToString());
+            WriterProvider.WriteEndAttribute();
+            var valueReadResult = DataReader.ReadBinary(arraySize);
+            HoldValue = valueReadResult.Value;
+#if USELOG
+            Logger.LogBinaryValue(HoldValue, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
+#endif
+        }
+
+        private void ProcessPrimitiveType(NodeType propertyType, bool isArray, int arraySize)
+        {
+            if (isArray)
+            {
+                var size = (arraySize / (propertyType.Size * propertyType.Count)).ToString();
+                WriterProvider.WriteStartAttribute("__count");
+                WriterProvider.WriteAttributeValue(size);
+                WriterProvider.WriteEndAttribute();
+            }
+
+            // force to read as 32bit if is array
+            var spanResult = isArray
+                ? DataReader.ReadBytes32BitAligned(arraySize)
+                : DataReader.ReadBytes(arraySize);
+            var span = spanResult.Span;
+
+            Span<char> charSpan = stackalloc char[Constants.MaxStackLength];
+            var stringBuilder = new ValueStringBuilder(charSpan);
+            var loopCount = arraySize / propertyType.Size;
+            for (var i = 0; i < loopCount; i++)
+            {
+                var subSpan = span.Slice(i * propertyType.Size, propertyType.Size);
+#if NET6_0_OR_GREATER
+                propertyType.AppendString(ref stringBuilder, subSpan);
+#else
+                stringBuilder.Append(propertyType.GetString(subSpan));
+#endif
+                if (i != loopCount - 1)
+                {
+#if NETCOREAPP3_1_OR_GREATER
+                    stringBuilder.Append(' ');
+#else
+                    stringBuilder.Append(" ");
+#endif
+                }
+            }
+
+            HoldValue = stringBuilder.ToString();
+#if USELOG
+            Logger.LogArrayValue(HoldValue, spanResult.ReadStatus.Offset, spanResult.ReadStatus.Flag);
+#endif
+        }
+
+        private int GetArraySize(NodeType propertyType, bool isArray)
+        {
+            int arraySize;
+            if (isArray || propertyType.Name is "str" or "bin")
+            {
+                var valueReadResult = DataReader.ReadS32();
+                arraySize = valueReadResult.Value; // Total size.
+#if USELOG
+                Logger.LogArraySize(arraySize, valueReadResult.ReadStatus.Offset, valueReadResult.ReadStatus.Flag);
+#endif
+            }
+            else
+            {
+                arraySize = propertyType.Size * propertyType.Count;
+            }
+
+            return arraySize;
+        }
 
         public void Dispose()
         {

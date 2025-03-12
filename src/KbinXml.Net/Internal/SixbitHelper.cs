@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using KbinXml.Net.Utils;
+using Microsoft.IO;
 
 //using SixbitHelperImpl = KbinXml.Net.Utils.SixbitHelperOptimized;
 #if NET6_0_OR_GREATER
@@ -44,6 +45,11 @@ internal static class SixbitHelper
         return ms.GetBuffer();
     }
 
+    public static void EncodeAndWrite(RecyclableMemoryStream stream, string input)
+    {
+        EncodeCore(input, stream);
+    }
+
     /// <summary>
     /// Encodes a string and writes the 6-bit encoded data directly to a stream.
     /// </summary>
@@ -75,6 +81,30 @@ internal static class SixbitHelper
         var inputSpan = rentedInput.Array.AsSpan(0, length);
         SixbitHelperDecImpl.Decode(buffer, inputSpan);
         return GetString(inputSpan);
+    }
+
+    private static void EncodeCore(string input, RecyclableMemoryStream stream)
+    {
+        var inputLength = input.Length;
+        var outputLength = (inputLength * 6 + 7) / 8;
+
+        if (inputLength <= Constants.MaxStackLength)
+        {
+            Span<byte> inputBuffer = stackalloc byte[inputLength];
+            FillInput(input, inputBuffer);
+            Span<byte> outputBuffer = stream.GetSpan(outputLength);
+            SixbitHelperEncImpl.Encode(inputBuffer, outputBuffer);
+            stream.Advance(outputLength);
+        }
+        else
+        {
+            using var rentedInput = new RentedArray<byte>(ArrayPool<byte>.Shared, inputLength);
+            var inputSpan = rentedInput.Array.AsSpan(0, inputLength);
+            FillInput(input, inputSpan);
+            Span<byte> outputSpan = stream.GetSpan(outputLength);
+            SixbitHelperEncImpl.Encode(inputSpan, outputSpan);
+            stream.Advance(outputLength);
+        }
     }
 
     private static void EncodeCore(string input, Stream stream)

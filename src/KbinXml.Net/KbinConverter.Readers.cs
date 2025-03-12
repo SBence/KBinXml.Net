@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -79,6 +80,42 @@ public static partial class KbinConverter
     {
         readOptions ??= new ReadOptions();
         var bytes = (byte[])ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions), out knownEncodings);
+        return bytes;
+    }
+
+    /// <summary>
+    /// Converts KBin binary data to raw XML bytes.
+    /// </summary>
+    /// <param name="sourceBuffer">The source buffer containing KBin-formatted data.</param>
+    /// <param name="readOptions">Optional reading configuration options.</param>
+    /// <returns>A MemoryStream containing the XML document in UTF-8 encoding.</returns>
+    /// <inheritdoc cref="ReadXmlLinq(ReadOnlyMemory{byte}, ReadOptions?)"/>
+    /// <remarks>
+    /// The resulting byte array contains standard XML 1.0 formatted data without
+    /// Byte Order Mark (BOM) by default.
+    /// </remarks>
+    public static MemoryStream GetXmlStream(ReadOnlyMemory<byte> sourceBuffer, ReadOptions? readOptions = null)
+    {
+        readOptions ??= new ReadOptions();
+        var bytes = (MemoryStream)ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions, true),
+            out _);
+        return bytes;
+    }
+
+    /// <summary>
+    /// Converts KBin binary data to raw XML bytes and outputs the detected encoding.
+    /// </summary>
+    /// <param name="sourceBuffer">The source buffer containing KBin-formatted data.</param>
+    /// <param name="knownEncodings">When this method returns, contains the detected encoding used in the KBin data.</param>
+    /// <param name="readOptions">Optional reading configuration options.</param>
+    /// <returns>A MemoryStream containing the XML document in UTF-8 encoding.</returns>
+    /// <inheritdoc cref="ReadXmlBytes(ReadOnlyMemory{byte}, ReadOptions?)"/>
+    public static MemoryStream GetXmlStream(ReadOnlyMemory<byte> sourceBuffer, out KnownEncodings knownEncodings,
+        ReadOptions? readOptions = null)
+    {
+        readOptions ??= new ReadOptions();
+        var bytes = (MemoryStream)ReaderImpl(sourceBuffer, e => new XmlWriterProvider(e, readOptions, true),
+            out knownEncodings);
         return bytes;
     }
 

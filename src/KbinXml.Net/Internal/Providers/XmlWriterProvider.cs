@@ -8,19 +8,21 @@ namespace KbinXml.Net.Internal.Providers;
 internal class XmlWriterProvider : WriterProvider
 {
     private readonly ReadOptions _readOptions;
+    private readonly bool _returnStream;
     private readonly MemoryStream _writerStream;
     private readonly XmlWriter _xmlWriter;
 
-    public XmlWriterProvider(Encoding encoding, ReadOptions readOptions) : base(encoding)
+    public XmlWriterProvider(Encoding encoding, ReadOptions readOptions, bool returnStream = false) : base(encoding)
     {
         _readOptions = readOptions;
+        _returnStream = returnStream;
         var settings = new XmlWriterSettings
         {
             Async = false,
             Encoding = encoding,
             Indent = false
         };
-        _writerStream = new MemoryStream();
+        _writerStream = KbinConverter.RecyclableMemoryStreamManager.GetStream("XmlWriterProvider");
         _xmlWriter = XmlWriter.Create(_writerStream, settings);
     }
 
@@ -70,6 +72,12 @@ internal class XmlWriterProvider : WriterProvider
     public override object GetResult()
     {
         _xmlWriter.Flush();
+        if (_returnStream)
+        {
+            _writerStream.Seek(0, SeekOrigin.Begin);
+            return _writerStream;
+        }
+
         return _writerStream.ToArray();
     }
 
@@ -77,6 +85,6 @@ internal class XmlWriterProvider : WriterProvider
     public override void Dispose()
     {
         _xmlWriter.Dispose();
-        _writerStream.Dispose();
+        if (!_returnStream) _writerStream.Dispose();
     }
 }
