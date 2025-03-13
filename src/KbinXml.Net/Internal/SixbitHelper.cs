@@ -93,6 +93,7 @@ internal static class SixbitHelper
             Span<byte> inputBuffer = stackalloc byte[inputLength];
             FillInput(input, inputBuffer);
             Span<byte> outputBuffer = stream.GetSpan(outputLength);
+            outputBuffer.Slice(0, outputLength).Clear();
             SixbitHelperEncImpl.Encode(inputBuffer, outputBuffer);
             stream.Advance(outputLength);
         }
@@ -102,6 +103,7 @@ internal static class SixbitHelper
             var inputSpan = rentedInput.Array.AsSpan(0, inputLength);
             FillInput(input, inputSpan);
             Span<byte> outputSpan = stream.GetSpan(outputLength);
+            outputSpan.Slice(0, outputLength).Clear();
             SixbitHelperEncImpl.Encode(inputSpan, outputSpan);
             stream.Advance(outputLength);
         }
