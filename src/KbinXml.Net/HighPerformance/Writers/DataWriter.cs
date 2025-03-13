@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
-using KbinXml.Net.Internal;
 using KbinXml.Net.Utils;
 using Microsoft.IO;
 
@@ -11,12 +9,7 @@ namespace KbinXml.Net.HighPerformance.Writers;
 internal partial struct DataWriter : IKBinWriter, IDisposable
 {
     internal readonly RecyclableMemoryStream Stream;
-
     private readonly Encoding _encoding;
-
-#if NETCOREAPP3_1_OR_GREATER
-    private readonly int _shiftVal;
-#endif
 
     private int _pos32;
     private int _pos16;
@@ -25,18 +18,6 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
     public DataWriter(Encoding encoding, int capacity = 0)
     {
         _encoding = encoding;
-#if NETCOREAPP3_1_OR_GREATER
-        _shiftVal = EncodingDictionary.ReverseEncodingMap[encoding] switch
-        {
-            0x00 => 1,
-            0x20 => 1,
-            0x40 => 1,
-            0x60 => 2,
-            0x80 => 2,
-            0xA0 => 2,
-            _ => throw new ArgumentOutOfRangeException(nameof(encoding), encoding, null)
-        };
-#endif
         Stream = KbinConverter.RecyclableMemoryStreamManager.GetStream("wd", capacity);
     }
 
@@ -66,44 +47,103 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
 
     public void WriteString(string value)
     {
-        var bytes = _encoding.GetBytes(value);
+        // 计算编码后的字节长度（包括结尾的0字节）
+        int byteCount = _encoding.GetByteCount(value) + 1;
 
-        var length = bytes.Length + 1;
-        byte[]? arr = null;
-        Span<byte> span = length <= Constants.MaxStackLength
-            ? stackalloc byte[length]
-            : (arr = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
-        try
+        // 先写入长度
+        WriteU32((uint)byteCount);
+
+        // 准备写入数据（32位对齐）
+        PadStream(_pos32);
+
+        // 获取足够大小的Span
+        if (_pos32 == Stream.Length)
         {
+            var span = Stream.GetSpan(byteCount);
+#if NETCOREAPP3_1_OR_GREATER
+            int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
+            span[bytesWritten] = 0; // 添加结尾的0字节
+#else
+            var bytes = _encoding.GetBytes(value);
             bytes.CopyTo(span);
+            span[bytes.Length] = 0; // 添加结尾的0字节
+#endif
+            Stream.Advance(byteCount);
 
-            WriteU32((uint)length);
-            Write32BitAligned(span);
+            _pos32 += byteCount;
         }
-        finally
+        else
         {
-            if (arr != null) ArrayPool<byte>.Shared.Return(arr);
+            var streamPosition = Stream.Position;
+            Stream.Position = _pos32;
+
+            var span = Stream.GetSpan(byteCount);
+#if NETCOREAPP3_1_OR_GREATER
+            int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
+            span[bytesWritten] = 0; // 添加结尾的0字节
+#else
+            var bytes = _encoding.GetBytes(value);
+            bytes.CopyTo(span);
+            span[bytes.Length] = 0; // 添加结尾的0字节
+#endif
+            Stream.Advance(byteCount);
+
+            _pos32 += byteCount;
+            Stream.Position = streamPosition;
         }
+
+        // 处理对齐
+        var left = _pos32 & 3;
+        if (left != 0)
+        {
+            _pos32 += 4 - left;
+        }
+
+        Realign16_8();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteBinary(string value)
     {
-        var length = value.Length >> 1;
+        // 计算二进制数据的长度（每两个字符表示一个字节）
+        int length = value.Length >> 1;
+
+        // 先写入长度
         WriteU32((uint)length);
-        byte[]? arr = null;
-        Span<byte> span = length <= Constants.MaxStackLength
-            ? stackalloc byte[length]
-            : (arr = ArrayPool<byte>.Shared.Rent(length)).AsSpan(0, length);
-        try
+
+        // 准备写入数据（32位对齐）
+        PadStream(_pos32);
+
+        // 获取足够大小的Span并写入数据
+        if (_pos32 == Stream.Length)
         {
-            HexConverter.TryDecodeFromUtf16(value.AsSpan(), span);
-            Write32BitAligned(span);
+            var span = Stream.GetSpan(length);
+            HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
+            Stream.Advance(length);
+
+            _pos32 += length;
         }
-        finally
+        else
         {
-            if (arr != null) ArrayPool<byte>.Shared.Return(arr);
+            var streamPosition = Stream.Position;
+            Stream.Position = _pos32;
+
+            var span = Stream.GetSpan(length);
+            HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
+            Stream.Advance(length);
+
+            _pos32 += length;
+            Stream.Position = streamPosition;
         }
+
+        // 处理对齐
+        var left = _pos32 & 3;
+        if (left != 0)
+        {
+            _pos32 += 4 - left;
+        }
+
+        Realign16_8();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -6,6 +6,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using KbinXml.Net;
+using KbinXml.Net.HighPerformance;
 using kbinxmlcs;
 
 #if NETCOREAPP
@@ -48,20 +49,26 @@ public class SingleThreadComparisonBetweenLibsTask
     }
 
     [Benchmark]
-    public object? WriteLinq_FSH_B()
+    public object? WriteLinq_NKZsmosNew()
     {
-        var kbinWriter = new KbinWriter(_linq, Encoding.UTF8);
-        return kbinWriter.Write();
+        return KBinWriter.Write(_linq, KnownEncodings.UTF8);
     }
 
-#if NETCOREAPP
-    [Benchmark]
-    public object? WriteLinq_ItsNovaHere()
-    {
-        var kbinWriter = new Writer(_linq, Compression.Compressed);
-        using var ms = new MemoryStream();
-        kbinWriter.WriteTo(ms);
-        return ms.ToArray();
-    }
-#endif
+//    [Benchmark]
+//    public object? WriteLinq_FSH_B()
+//    {
+//        var kbinWriter = new KbinWriter(_linq, Encoding.UTF8);
+//        return kbinWriter.Write();
+//    }
+
+//#if NETCOREAPP
+//    [Benchmark]
+//    public object? WriteLinq_ItsNovaHere()
+//    {
+//        var kbinWriter = new Writer(_linq, Compression.Compressed);
+//        using var ms = new MemoryStream();
+//        kbinWriter.WriteTo(ms);
+//        return ms.ToArray();
+//    }
+//#endif
 }

@@ -28,7 +28,15 @@ public static partial class KbinConverter
         new(Enum.GetValues(ControlTypeT).Cast<byte>());
 #endif
 
-    internal static readonly RecyclableMemoryStreamManager RecyclableMemoryStreamManager = new();
+    internal static readonly RecyclableMemoryStreamManager RecyclableMemoryStreamManager = new()
+    {
+        Settings =
+        {
+            BlockSize = 1024,
+            AggressiveBufferReturn = true,
+            LargeBufferMultiple = 1024 * 128,
+        }
+    };
 
     internal static string GetActualName(string name, string? repairedPrefix)
     {
