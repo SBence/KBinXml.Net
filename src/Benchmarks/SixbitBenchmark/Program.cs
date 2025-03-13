@@ -82,7 +82,7 @@ public class DecodeTask
         rnd.NextBytes(buffer);
 
         Span<byte> output = new byte[Length * 6 / 8];
-        SixbitHelperOriginal.EncodeFillOutput(buffer, ref output);
+        SixbitHelperOriginal.Encode(buffer, output);
 
         _testData = output.ToArray();
 

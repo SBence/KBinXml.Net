@@ -25,12 +25,12 @@ namespace StableKbin
         /// </summary>
         /// <param name="xNode">The XML document to be written as a binary XML.</param>
         /// <param name="encoding">The encoding of the XML document.</param>
-        public XmlWriter(XNode xNode, Encoding encoding)
+        public XmlWriter(XNode xNode, Encoding encoding, bool compress = true)
         {
             _document = xNode is XDocument xDoc ? xDoc : new XDocument(xNode);
 
             _encoding = encoding;
-            _nodeBuffer = new NodeBuffer(true, encoding);
+            _nodeBuffer = new NodeBuffer(compress, encoding);
             _dataBuffer = new DataBuffer(encoding);
         }
 
@@ -39,12 +39,12 @@ namespace StableKbin
         /// </summary>
         /// <param name="rawXml">The XML document to be written as a binary XML.</param>
         /// <param name="encoding">The encoding of the XML document.</param>
-        public XmlWriter(string rawXml, Encoding encoding)
+        public XmlWriter(string rawXml, Encoding encoding, bool compress = true)
         {
             _rawXml = rawXml;
 
             _encoding = encoding;
-            _nodeBuffer = new NodeBuffer(true, encoding);
+            _nodeBuffer = new NodeBuffer(compress, encoding);
             _dataBuffer = new DataBuffer(encoding);
         }
 
