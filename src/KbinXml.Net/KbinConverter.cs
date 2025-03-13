@@ -32,9 +32,9 @@ public static partial class KbinConverter
     {
         Settings =
         {
-            BlockSize = 1024,
+            //BlockSize = 1024,
             AggressiveBufferReturn = true,
-            LargeBufferMultiple = 1024 * 128,
+            //LargeBufferMultiple = 1024 * 128,
         }
     };
 

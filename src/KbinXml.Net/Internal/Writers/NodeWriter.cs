@@ -8,7 +8,7 @@ internal class NodeWriter : BeBinaryWriter
     public bool Compressed { get; }
     private readonly Encoding _encoding;
 
-    public NodeWriter(bool compressed, Encoding encoding)
+    public NodeWriter(bool compressed, Encoding encoding, int capacity = 0) : base(capacity)
     {
         Compressed = compressed;
         _encoding = encoding;

@@ -17,7 +17,7 @@ internal class DataWriter : BeBinaryWriter
     private readonly int _shiftVal;
 #endif
 
-    public DataWriter(Encoding encoding)
+    public DataWriter(Encoding encoding, int capacity = 0) : base(capacity)
     {
         _encoding = encoding;
 #if NETCOREAPP3_1_OR_GREATER

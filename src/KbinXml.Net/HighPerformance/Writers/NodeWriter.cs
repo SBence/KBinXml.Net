@@ -15,7 +15,7 @@ internal readonly ref partial struct NodeWriter
 
     public NodeWriter(bool compressed, Encoding encoding, int capacity = 0)
     {
-        Stream = KbinConverter.RecyclableMemoryStreamManager.GetStream("wbe", capacity);
+        Stream = KbinConverter.RecyclableMemoryStreamManager.GetStream("wn", capacity);
         Compressed = compressed;
         _encoding = encoding;
     }
