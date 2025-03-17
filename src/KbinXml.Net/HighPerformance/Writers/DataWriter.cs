@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using KbinXml.Net.Utils;
 using Microsoft.IO;
 
 namespace KbinXml.Net.HighPerformance.Writers;
 
-internal struct DataWriter : IKBinWriter, IDisposable
+internal partial struct DataWriter : IKBinWriter, IDisposable
 {
     internal readonly RecyclableMemoryStream Stream;
     private readonly Encoding _encoding;
@@ -159,144 +157,9 @@ internal struct DataWriter : IKBinWriter, IDisposable
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteS8(sbyte value)
-    {
-        WriteByte((byte)value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteU8(byte value)
-    {
-        WriteByte(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteS16(short value)
-    {
-        Write16BitAlignedInternal(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteU16(ushort value)
-    {
-        Write16BitAlignedInternal(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteS32(int value)
-    {
-        Write32BitAlignedInternal(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteU32(uint value)
-    {
-        Write32BitAlignedInternal(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteS64(long value)
-    {
-        Write32BitAlignedInternal(value);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteU64(ulong value)
-    {
-        Write32BitAlignedInternal(value);
-    }
-
     public void Dispose()
     {
         Stream.Dispose();
-    }
-
-    private void Write16BitAlignedInternal<T>(T value) where T : unmanaged
-    {
-        // 统一实现16位写入的核心逻辑
-        const int size = 2; // sizeof(short) or sizeof(ushort)
-        ref var pointer = ref _pos16;
-        var increment = GetIncrementLength(pointer);
-
-        if ((pointer & 3) == 0) // 如果16位指针是4字节对齐的
-        {
-            _pos32 += 4;
-        }
-
-        // 合并increment==0和increment>0的分支逻辑
-        if (increment >= 0)
-        {
-            var sizeHint = increment + size;
-            var span = Stream.GetSpan(sizeHint);
-            if (increment > 0)
-            {
-                span.Slice(0, increment).Clear();
-                BitConverterHelper.WriteBeBytesT(span.Slice(increment), value);
-            }
-            else
-            {
-                BitConverterHelper.WriteBeBytesT(span, value);
-            }
-
-            Stream.Advance(sizeHint);
-        }
-        else
-        {
-            Debug.Assert(false);
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytesT(span, value);
-            Stream.Advance(size);
-
-            Stream.Position = streamPosition;
-        }
-
-        pointer += size;
-        Realign16_8();
-    }
-
-    private void Write32BitAlignedInternal<T>(T value) where T : unmanaged
-    {
-        int size = Unsafe.SizeOf<T>();
-        ref var pointer = ref _pos32;
-        var increment = GetIncrementLength(pointer);
-
-        // 合并increment==0和increment>0的分支逻辑
-        if (increment >= 0)
-        {
-            var sizeHint = increment + size;
-            var span = Stream.GetSpan(sizeHint);
-            if (increment > 0)
-            {
-                span.Slice(0, increment).Clear();
-                BitConverterHelper.WriteBeBytesT(span.Slice(increment), value);
-            }
-            else
-            {
-                BitConverterHelper.WriteBeBytesT(span, value);
-            }
-
-            Stream.Advance(sizeHint);
-        }
-        else
-        {
-            Debug.Assert(false);
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytesT(span, value);
-            Stream.Advance(size);
-
-            Stream.Position = streamPosition;
-        }
-
-        pointer += size;
-        AlignTo4Bytes(ref pointer);
-        Realign16_8();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -307,7 +170,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
 
         if (increment > 0)
         {
-            span.Slice(0, increment).Clear();
+            ClearSpan(span, increment);
             span = span.Slice(increment);
         }
 
@@ -330,7 +193,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
 
         if (increment > 0)
         {
-            span.Slice(0, increment).Clear();
+            ClearSpan(span, increment);
             span = span.Slice(increment);
         }
 
@@ -347,7 +210,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
             var span = Stream.GetSpan(sizeHint);
             if (increment > 0)
             {
-                span.Slice(0, increment).Clear();
+                ClearSpan(span, increment);
                 span[increment] = value;
             }
             else
@@ -378,7 +241,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
             var span = Stream.GetSpan(sizeHint);
             if (increment > 0)
             {
-                span.Slice(0, increment).Clear();
+                ClearSpan(span, increment);
                 buffer.CopyTo(span.Slice(increment));
             }
             else
@@ -410,16 +273,6 @@ internal struct DataWriter : IKBinWriter, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AlignTo4Bytes(ref int pointer)
-    {
-        var remainder = pointer & 3;
-        if (remainder != 0)
-        {
-            pointer += 4 - remainder;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Realign16_8()
     {
         if ((_pos8 & 3) == 0)
@@ -431,5 +284,40 @@ internal struct DataWriter : IKBinWriter, IDisposable
         {
             _pos16 = _pos32;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ClearSpan(Span<byte> span, int increment)
+    {
+        if (increment == 1)
+        {
+            span[0] = 0;
+        }
+        else if (increment == 2)
+        {
+            span[0] = 0;
+            span[1] = 0;
+        }
+        else if (increment == 3)
+        {
+            span[0] = 0;
+            span[1] = 0;
+            span[2] = 0;
+        }
+        else if (increment > 0)
+        {
+            span.Slice(0, increment).Clear();
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AlignTo4Bytes(ref int pointer)
+    {
+        pointer = (pointer + 3) & ~3;
+        //var remainder = pointer & 3;
+        //if (remainder != 0)
+        //{
+        //    pointer += 4 - remainder;
+        //}
     }
 }

@@ -54,21 +54,21 @@ public class SingleThreadComparisonBetweenLibsTask
         return KBinWriter.Write(_linq, KnownEncodings.UTF8);
     }
 
-//    [Benchmark]
-//    public object? WriteLinq_FSH_B()
-//    {
-//        var kbinWriter = new KbinWriter(_linq, Encoding.UTF8);
-//        return kbinWriter.Write();
-//    }
+    [Benchmark]
+    public object? WriteLinq_FSH_B()
+    {
+        var kbinWriter = new KbinWriter(_linq, Encoding.UTF8);
+        return kbinWriter.Write();
+    }
 
-//#if NETCOREAPP
-//    [Benchmark]
-//    public object? WriteLinq_ItsNovaHere()
-//    {
-//        var kbinWriter = new Writer(_linq, Compression.Compressed);
-//        using var ms = new MemoryStream();
-//        kbinWriter.WriteTo(ms);
-//        return ms.ToArray();
-//    }
-//#endif
+#if NETCOREAPP
+    [Benchmark]
+    public object? WriteLinq_ItsNovaHere()
+    {
+        var kbinWriter = new Writer(_linq, Compression.Compressed);
+        using var ms = new MemoryStream();
+        kbinWriter.WriteTo(ms);
+        return ms.ToArray();
+    }
+#endif
 }
