@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using KbinXml.Net;
 using KbinXml.Net.HighPerformance;
@@ -15,6 +16,36 @@ namespace GeneralUnitTests
         {
             _outputHelper = outputHelper;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        }
+
+        [Theory]
+        [InlineData("""
+                    <confuse__a3>
+                      <confuse__a4>
+                        <confuse__a5 __type="s32">0</confuse__a5>
+                        <confuse__a6 __type="s8">0</confuse__a6>
+                      </confuse__a4>
+                      <confuse__a4>
+                        <confuse__a5 __type="s32">1</confuse__a5>
+                        <confuse__a6 __type="s8">0</confuse__a6>
+                      </confuse__a4>
+                    </confuse__a3>
+                    """)]
+        //[InlineData("""
+        //            <root>
+        //                <rarity __type="u8">5</rarity>
+        //                <generator_no __type="u16">1</generator_no>
+        //                <distribution_date __type="u32">12356134</distribution_date>
+        //                <is_default __type="u64">21512976124353</is_default>
+        //                <sort_no __type="s8">-121</sort_no>
+        //                <genre __type="s16">-5126</genre>
+        //                <limited __type="s32">-35721234</limited>
+        //                <wtf_is_this __type="s64">-253178167252134</wtf_is_this>
+        //            </root>
+        //            """)]
+        public void TestSpecial(string value)
+        {
+            DoWorks(value);
         }
 
         [Theory]
@@ -155,8 +186,8 @@ namespace GeneralUnitTests
             var result2 = KbinConverter.ReadXmlLinq(bytes2).ToString();
             var result3 = KBinReader.ReadXmlLinq(bytes2).ToString();
 
-            _outputHelper.WriteLine(string.Join(", ", bytes2));
-            _outputHelper.WriteLine(string.Join(", ", bytes3));
+            _outputHelper.WriteLine(string.Join(", ", bytes2.Select((k, i) => $"{i}: 0x{k:X2}")));
+            _outputHelper.WriteLine(string.Join(", ", bytes3.Select((k, i) => $"{i}: 0x{k:X2}")));
 
             //_outputHelper.WriteLine(result);
             _outputHelper.WriteLine(result2);

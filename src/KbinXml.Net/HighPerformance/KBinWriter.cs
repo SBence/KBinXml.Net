@@ -253,7 +253,6 @@ public static class KBinWriter
 
         //Write node buffer length and contents.
         output.WriteS32(nodeLength);
-        var sb = context.NodeWriter.Stream.ToArray();
         context.NodeWriter.Stream.WriteTo(output.Stream);
 
         //Write data buffer length and contents.

@@ -6,7 +6,7 @@ using Microsoft.IO;
 
 namespace KbinXml.Net.HighPerformance.Writers;
 
-internal partial struct DataWriter : IKBinWriter, IDisposable
+internal struct DataWriter : IKBinWriter, IDisposable
 {
     internal readonly RecyclableMemoryStream Stream;
     private readonly Encoding _encoding;
@@ -228,37 +228,7 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
 
     public void WriteS16(short value)
     {
-        const int size = sizeof(short);
-        ref var pointer = ref _pos16;
-        PadStream(pointer);
-
-        if ((pointer & 3) == 0) // pointer % 4
-        {
-            _pos32 += 4;
-        }
-
-        if (pointer == Stream.Length)
-        {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-            Stream.Position = streamPosition;
-        }
-
-        Realign16_8();
+        Write16BitAlignedInternal(value);
     }
 
     public void WriteU16(ushort value)
@@ -275,7 +245,7 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
         if (pointer == Stream.Length)
         {
             var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
+            BitConverterHelper.WriteBeBytesT(span, value);
             Stream.Advance(size);
 
             pointer += size;
@@ -286,7 +256,7 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
             Stream.Position = pointer;
 
             var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
+            BitConverterHelper.WriteBeBytesT(span, value);
             Stream.Advance(size);
 
             pointer += size;
@@ -298,146 +268,22 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
 
     public void WriteS32(int value)
     {
-        const int size = sizeof(int);
-        ref var pointer = ref _pos32;
-        PadStream(pointer);
-
-        if (pointer == Stream.Length)
-        {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-            Stream.Position = streamPosition;
-        }
-
-        var left = pointer & 3;
-        if (left != 0)
-        {
-            pointer += 4 - left;
-        }
-
-        Realign16_8();
+        Write32BitAlignedInternal(value);
     }
 
     public void WriteU32(uint value)
     {
-        const int size = sizeof(uint);
-        ref var pointer = ref _pos32;
-        PadStream(pointer);
-
-        if (pointer == Stream.Length)
-        {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-            Stream.Position = streamPosition;
-        }
-
-        var left = pointer & 3;
-        if (left != 0)
-        {
-            pointer += 4 - left;
-        }
-
-        Realign16_8();
+        Write32BitAlignedInternal(value);
     }
 
     public void WriteS64(long value)
     {
-        const int size = sizeof(long);
-        ref var pointer = ref _pos32;
-        PadStream(pointer);
-
-        if (pointer == Stream.Length)
-        {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-            Stream.Position = streamPosition;
-        }
-
-        var left = pointer & 3;
-        if (left != 0)
-        {
-            pointer += 4 - left;
-        }
-
-        Realign16_8();
+        Write32BitAlignedInternal(value);
     }
 
     public void WriteU64(ulong value)
     {
-        const int size = sizeof(ulong);
-        ref var pointer = ref _pos32;
-        PadStream(pointer);
-
-        if (pointer == Stream.Length)
-        {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytes(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-            Stream.Position = streamPosition;
-        }
-
-        var left = pointer & 3;
-        if (left != 0)
-        {
-            pointer += 4 - left;
-        }
-
-        Realign16_8();
+        Write32BitAlignedInternal(value);
     }
 
     public void Dispose()
@@ -445,15 +291,78 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
         Stream.Dispose();
     }
 
-    //private ref int GetPointer(int size)
-    //{
-    //    switch (size)
-    //    {
-    //        case 1: return ref _pos8;
-    //        case 2: return ref _pos16;
-    //        default: return ref _pos32;
-    //    }
-    //}
+    private void Write16BitAlignedInternal<T>(T value) where T : unmanaged
+    {
+        // 统一实现16位写入的核心逻辑
+        //int size = Unsafe.SizeOf<T>();
+        int size = 2; // sizeof(short) or sizeof(ushort)
+        ref var pointer = ref _pos16;
+        PadStream(pointer);
+
+        if ((pointer & 3) == 0) // 如果16位指针是4字节对齐的
+        {
+            _pos32 += 4;
+        }
+
+        if (pointer == Stream.Length)
+        {
+            var span = Stream.GetSpan(size);
+            BitConverterHelper.WriteBeBytesT(span, value);
+            Stream.Advance(size);
+
+            pointer += size;
+        }
+        else
+        {
+            var streamPosition = Stream.Position;
+            Stream.Position = pointer;
+
+            var span = Stream.GetSpan(size);
+            BitConverterHelper.WriteBeBytesT(span, value);
+            Stream.Advance(size);
+
+            pointer += size;
+            Stream.Position = streamPosition;
+        }
+
+        Realign16_8();
+    }
+
+    private void Write32BitAlignedInternal<T>(T value) where T : unmanaged
+    {
+        int size = Unsafe.SizeOf<T>();
+        ref var pointer = ref _pos32;
+        PadStream(pointer);
+
+        if (pointer == Stream.Length)
+        {
+            var span = Stream.GetSpan(size);
+            BitConverterHelper.WriteBeBytesT(span, value);
+            Stream.Advance(size);
+
+            pointer += size;
+        }
+        else
+        {
+            var streamPosition = Stream.Position;
+            Stream.Position = pointer;
+
+            var span = Stream.GetSpan(size);
+            BitConverterHelper.WriteBeBytesT(span, value);
+            Stream.Advance(size);
+
+            pointer += size;
+            Stream.Position = streamPosition;
+        }
+
+        var left = pointer & 3;
+        if (left != 0)
+        {
+            pointer += 4 - left;
+        }
+
+        Realign16_8();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Realign16_8()

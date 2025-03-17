@@ -64,6 +64,21 @@ public static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int WriteBeBytesT<T>(Span<byte> span, T value)
+    {
+        if (typeof(T) == typeof(ushort)) return WriteBeBytes(span, Unsafe.As<T, ushort>(ref value));
+        if (typeof(T) == typeof(short)) return WriteBeBytes(span, Unsafe.As<T, short>(ref value));
+        if (typeof(T) == typeof(uint)) return WriteBeBytes(span, Unsafe.As<T, uint>(ref value));
+        if (typeof(T) == typeof(int)) return WriteBeBytes(span, Unsafe.As<T, int>(ref value));
+        if (typeof(T) == typeof(ulong)) return WriteBeBytes(span, Unsafe.As<T, ulong>(ref value));
+        if (typeof(T) == typeof(long)) return WriteBeBytes(span, Unsafe.As<T, long>(ref value));
+        if (typeof(T) == typeof(float)) return WriteBeBytes(span, Unsafe.As<T, float>(ref value));
+        if (typeof(T) == typeof(double)) return WriteBeBytes(span, Unsafe.As<T, double>(ref value));
+
+        throw new ArgumentOutOfRangeException();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int WriteBeBytes(Span<byte> span, ushort value)
     {
         BinaryPrimitives.WriteUInt16BigEndian(span, value);
