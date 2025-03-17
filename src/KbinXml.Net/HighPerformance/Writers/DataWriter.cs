@@ -27,6 +27,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
         Write8BitAligned(singleByte);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteBytes(scoped ReadOnlySpan<byte> buffer)
     {
         switch (buffer.Length)
@@ -54,51 +55,29 @@ internal struct DataWriter : IKBinWriter, IDisposable
         WriteU32((uint)byteCount);
 
         // 准备写入数据（32位对齐）
+        ref var pointer = ref _pos32;
         PadStream(_pos32);
 
         // 获取足够大小的Span
-        if (_pos32 == Stream.Length)
+        if (pointer == Stream.Length)
         {
-            var span = Stream.GetSpan(byteCount);
-#if NETCOREAPP3_1_OR_GREATER
-            int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
-            span[bytesWritten] = 0; // 添加结尾的0字节
-#else
-            var bytes = _encoding.GetBytes(value);
-            bytes.CopyTo(span);
-            span[bytes.Length] = 0; // 添加结尾的0字节
-#endif
-            Stream.Advance(byteCount);
+            WriteStringCore(value, byteCount);
 
-            _pos32 += byteCount;
+            pointer += byteCount;
         }
         else
         {
             var streamPosition = Stream.Position;
-            Stream.Position = _pos32;
+            Stream.Position = pointer;
 
-            var span = Stream.GetSpan(byteCount);
-#if NETCOREAPP3_1_OR_GREATER
-            int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
-            span[bytesWritten] = 0; // 添加结尾的0字节
-#else
-            var bytes = _encoding.GetBytes(value);
-            bytes.CopyTo(span);
-            span[bytes.Length] = 0; // 添加结尾的0字节
-#endif
-            Stream.Advance(byteCount);
+            WriteStringCore(value, byteCount);
 
-            _pos32 += byteCount;
+            pointer += byteCount;
             Stream.Position = streamPosition;
         }
 
         // 处理对齐
-        var left = _pos32 & 3;
-        if (left != 0)
-        {
-            _pos32 += 4 - left;
-        }
-
+        AlignTo4Bytes(ref pointer);
         Realign16_8();
     }
 
@@ -112,37 +91,28 @@ internal struct DataWriter : IKBinWriter, IDisposable
         WriteU32((uint)length);
 
         // 准备写入数据（32位对齐）
-        PadStream(_pos32);
+        ref var pointer = ref _pos32;
+        PadStream(pointer);
 
         // 获取足够大小的Span并写入数据
-        if (_pos32 == Stream.Length)
+        if (pointer == Stream.Length)
         {
-            var span = Stream.GetSpan(length);
-            HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
-            Stream.Advance(length);
+            WriteBinaryCore(value, length);
 
-            _pos32 += length;
+            pointer += length;
         }
         else
         {
             var streamPosition = Stream.Position;
-            Stream.Position = _pos32;
+            Stream.Position = pointer;
 
-            var span = Stream.GetSpan(length);
-            HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
-            Stream.Advance(length);
+            WriteBinaryCore(value, length);
 
-            _pos32 += length;
+            pointer += length;
             Stream.Position = streamPosition;
         }
 
-        // 处理对齐
-        var left = _pos32 & 3;
-        if (left != 0)
-        {
-            _pos32 += 4 - left;
-        }
-
+        AlignTo4Bytes(ref pointer);
         Realign16_8();
     }
 
@@ -179,15 +149,12 @@ internal struct DataWriter : IKBinWriter, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write32BitAligned(scoped ReadOnlySpan<byte> streamRentBuffer)
     {
-        PadStream(_pos32);
+        ref var pointer = ref _pos32;
+        PadStream(pointer);
 
-        WriteMultiBytes(streamRentBuffer, ref _pos32);
+        WriteMultiBytes(streamRentBuffer, ref pointer);
 
-        var left = _pos32 & 3;
-        if (left != 0)
-        {
-            _pos32 += 4 - left;
-        }
+        AlignTo4Bytes(ref pointer);
 
         Realign16_8();
     }
@@ -201,19 +168,6 @@ internal struct DataWriter : IKBinWriter, IDisposable
         }
     }
 
-    public void PadStream(int pointer)
-    {
-        int incrementLength = (int)(pointer - Stream.Length);
-        if (incrementLength <= 0) return;
-        if (incrementLength == 1) Stream.WriteByte(0);
-        else
-        {
-            Stream.GetSpan(incrementLength).Slice(0, incrementLength).Clear();
-            Stream.Advance(incrementLength);
-        }
-    }
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteS8(sbyte value)
     {
@@ -226,6 +180,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
         WriteByte(value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteS16(short value)
     {
         Write16BitAlignedInternal(value);
@@ -266,21 +221,25 @@ internal struct DataWriter : IKBinWriter, IDisposable
         Realign16_8();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteS32(int value)
     {
         Write32BitAlignedInternal(value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU32(uint value)
     {
         Write32BitAlignedInternal(value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteS64(long value)
     {
         Write32BitAlignedInternal(value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU64(ulong value)
     {
         Write32BitAlignedInternal(value);
@@ -365,19 +324,29 @@ internal struct DataWriter : IKBinWriter, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Realign16_8()
+    private void WriteStringCore(string value, int byteCount)
     {
-        if ((_pos8 & 3) == 0)
-        {
-            _pos8 = _pos32;
-        }
-
-        if ((_pos16 & 3) == 0)
-        {
-            _pos16 = _pos32;
-        }
+        var span = Stream.GetSpan(byteCount);
+#if NETCOREAPP3_1_OR_GREATER
+        int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
+        span[bytesWritten] = 0; // 添加结尾的0字节
+#else
+        var bytes = _encoding.GetBytes(value);
+        bytes.CopyTo(span);
+        span[bytes.Length] = 0; // 添加结尾的0字节
+#endif
+        Stream.Advance(byteCount);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteBinaryCore(string value, int length)
+    {
+        var span = Stream.GetSpan(length);
+        HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
+        Stream.Advance(length);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WriteMultiBytes(scoped ReadOnlySpan<byte> buffer, ref int pointer)
     {
         if (pointer == Stream.Length)
@@ -400,6 +369,7 @@ internal struct DataWriter : IKBinWriter, IDisposable
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WriteSingleByte(byte value, ref int pointer)
     {
         if (pointer == Stream.Length)
@@ -416,6 +386,43 @@ internal struct DataWriter : IKBinWriter, IDisposable
             pointer += 1;
 
             Stream.Position = streamPosition;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void PadStream(int pointer)
+    {
+        int incrementLength = (int)(pointer - Stream.Length);
+        if (incrementLength <= 0) return;
+        if (incrementLength == 1) Stream.WriteByte(0);
+        else
+        {
+            Stream.GetSpan(incrementLength).Slice(0, incrementLength).Clear();
+            Stream.Advance(incrementLength);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AlignTo4Bytes(ref int pointer)
+    {
+        var remainder = pointer & 3;
+        if (remainder != 0)
+        {
+            pointer += 4 - remainder;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Realign16_8()
+    {
+        if ((_pos8 & 3) == 0)
+        {
+            _pos8 = _pos32;
+        }
+
+        if ((_pos16 & 3) == 0)
+        {
+            _pos16 = _pos32;
         }
     }
 }
