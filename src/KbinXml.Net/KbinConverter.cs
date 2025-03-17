@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using KbinXml.Net.Internal;
 using KbinXml.Net.Internal.Debugging;
 using Microsoft.IO;
@@ -38,23 +39,46 @@ public static partial class KbinConverter
         }
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static string GetActualName(string name, string? repairedPrefix)
     {
-        if (repairedPrefix is not null && name.StartsWith(repairedPrefix, StringComparison.Ordinal))
-        {
-            return name.Substring(repairedPrefix.Length);
-        }
-        else
+        if (string.IsNullOrEmpty(repairedPrefix))
         {
             return name;
         }
+
+        if (name.Length < repairedPrefix.Length)
+        {
+            return name;
+        }
+
+        if (name.StartsWith(repairedPrefix, StringComparison.Ordinal))
+        {
+            return name.Substring(repairedPrefix.Length);
+        }
+
+        return name;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static string GetRepairedName(string name, string? repairedPrefix)
     {
-        if (repairedPrefix is null) return name;
-        if (name.Length < 1 || name[0] < 48 || name[0] > 57) return name;
+        if (repairedPrefix is null)
+        {
+            return name;
+        }
+
+        if (name.Length == 0 || !IsDigit(name[0]))
+        {
+            return name;
+        }
 
         return repairedPrefix + name;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsDigit(char c)
+    {
+        return c is >= '0' and <= '9';
     }
 }

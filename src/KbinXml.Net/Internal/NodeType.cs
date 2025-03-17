@@ -6,13 +6,10 @@ namespace KbinXml.Net.Internal;
 
 internal class NodeType
 {
-    public int Size { get; }
-
-    public int Count { get; }
-
-    public string Name { get; }
-
-    public ITypeConverter Converter { get; }
+    public readonly int Size;
+    public readonly int Count;
+    public readonly string Name;
+    public readonly ITypeConverter Converter;
 
     public NodeType(int size, int count, string name, ITypeConverter converter)
     {
@@ -33,7 +30,7 @@ internal class NodeType
     {
         return Converter.ToString(bytes);
     }
-    
+
 #if NET6_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendString(ref ValueStringBuilder stringBuilder, ReadOnlySpan<byte> span)

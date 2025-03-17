@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using KbinXml.Net;
+using KbinXml.Net.HighPerformance;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -61,8 +62,12 @@ namespace GeneralUnitTests
         [Fact]
         public void TestInvalidArrayCount()
         {
+            var writeOptions = new WriteOptions()
+            {
+                StrictMode = true
+            };
             var xml = "<root><array __type=\"s32\" __count=\"3\">1 2</array></root>";
-            Assert.Throws<KbinArrayCountMissMatchException>(() => KbinConverter.Write(xml, KnownEncodings.UTF8));
+            Assert.Throws<KbinArrayCountMissMatchException>(() => KBinWriter.Write(xml, KnownEncodings.UTF8, writeOptions));
         }
 
         [Fact]

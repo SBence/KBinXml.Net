@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.IO;
@@ -113,7 +114,12 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
 
         if ((_pos8 & 3) == 0)
         {
+            Debug.Assert(increment >= 0);
             _pos32 += 4;
+        }
+        else
+        {
+            Debug.Assert(increment <= 0);
         }
 
         WriteSingleByte(value, increment, ref _pos8);
@@ -128,7 +134,12 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
 
         if ((_pos16 & 3) == 0)
         {
+            Debug.Assert(increment >= 0);
             _pos32 += 4;
+        }
+        else
+        {
+            Debug.Assert(increment <= 0);
         }
 
         WriteMultiBytes(buffer, increment, ref _pos16);
@@ -151,9 +162,12 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PadStream()
     {
-        while ((Stream.Length & 3) != 0)
+        var remainder = (int)(Stream.Length & 3);
+        switch (remainder)
         {
-            Stream.WriteByte(0);
+            case 1: Stream.WriteByte(0); Stream.WriteByte(0); Stream.WriteByte(0); break;
+            case 2: Stream.WriteByte(0); Stream.WriteByte(0); break;
+            case 3: Stream.WriteByte(0); break;
         }
     }
 
@@ -228,7 +242,7 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
             Stream.Position = streamPosition;
         }
 
-        pointer += 1;
+        pointer++;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -236,8 +250,7 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
     {
         if (increment >= 0)
         {
-            var length = buffer.Length;
-            var sizeHint = increment + length;
+            var sizeHint = increment + buffer.Length;
             var span = Stream.GetSpan(sizeHint);
             if (increment > 0)
             {
@@ -269,21 +282,14 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetIncrementLength(int pointer)
     {
-        return (int)(pointer - Stream.Length);
+        return pointer - (int)Stream.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Realign16_8()
     {
-        if ((_pos8 & 3) == 0)
-        {
-            _pos8 = _pos32;
-        }
-
-        if ((_pos16 & 3) == 0)
-        {
-            _pos16 = _pos32;
-        }
+        if ((_pos8 & 3) == 0) _pos8 = _pos32;
+        if ((_pos16 & 3) == 0) _pos16 = _pos32;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -314,10 +320,5 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
     private static void AlignTo4Bytes(ref int pointer)
     {
         pointer = (pointer + 3) & ~3;
-        //var remainder = pointer & 3;
-        //if (remainder != 0)
-        //{
-        //    pointer += 4 - remainder;
-        //}
     }
 }

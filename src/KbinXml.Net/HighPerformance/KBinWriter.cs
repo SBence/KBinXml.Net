@@ -140,25 +140,28 @@ public static class KBinWriter
         WriteOptions writeOptions)
     {
         if (!EncodingDictionary.ReverseEncodingMap.TryGetValue(encoding, out var encodingBytes))
+        {
             throw new ArgumentOutOfRangeException(nameof(encoding), encoding, "Unsupported encoding for KBin");
+        }
+
+        var repairedPrefix = writeOptions.RepairedPrefix;
 
         while (reader.Read())
         {
             switch (reader.NodeType)
             {
                 case XmlNodeType.Element:
-                    context.ProcessHolding();
-                    //Console.WriteLine("Start Element {0}", reader.Name);
+                    context.FlushPendingData();
+
                     if (reader.AttributeCount > 0)
                     {
-                        ProcessAttributes(reader, ref context, writeOptions);
+                        ProcessAttributes(reader, ref context, repairedPrefix);
                     }
 
+                    var readerName = reader.Name;
                     if (context.TypeStr == null)
                     {
                         context.NodeWriter.WriteU8(1);
-                        context.NodeWriter.WriteString(KbinConverter.GetActualName(reader.Name,
-                            writeOptions.RepairedPrefix));
                     }
                     else
                     {
@@ -169,26 +172,29 @@ public static class KBinWriter
 
                         context.TypeId = typeId;
                         if (context.ArrayCountStr != null)
+                        {
                             context.NodeWriter.WriteU8((byte)(context.TypeId | 0x40));
+                        }
                         else
+                        {
                             context.NodeWriter.WriteU8(context.TypeId);
-
-                        context.NodeWriter.WriteString(KbinConverter.GetActualName(reader.Name,
-                            writeOptions.RepairedPrefix));
+                        }
                     }
+
+                    context.NodeWriter.WriteString(KbinConverter.GetActualName(readerName, repairedPrefix));
 
                     if (reader.IsEmptyElement)
                     {
-                        context.ProcessHolding();
+                        context.FlushPendingData();
                         context.NodeWriter.WriteU8(0xFE);
                     }
 
                     break;
                 case XmlNodeType.Text:
-                    context.HoldingValue = reader.Value;
+                    context.PendingValue = reader.Value;
                     break;
                 case XmlNodeType.EndElement:
-                    context.ProcessHolding();
+                    context.FlushPendingData();
                     context.NodeWriter.WriteU8(0xFE);
                     break;
                 default:
@@ -198,7 +204,7 @@ public static class KBinWriter
             }
         }
 
-        context.ProcessHolding();
+        context.FlushPendingData();
 
         context.NodeWriter.WriteU8(255);
         context.NodeWriter.Pad();
@@ -207,27 +213,29 @@ public static class KBinWriter
         return FinalizeOutput(ref context, encodingBytes);
     }
 
-    private static void ProcessAttributes(XmlReader reader, ref WriteContext context, WriteOptions writeOptions)
+    private static void ProcessAttributes(XmlReader reader, ref WriteContext context, string? repairedPrefix)
     {
-        for (int i = 0; i < reader.AttributeCount; i++)
+        var attrCount = reader.AttributeCount;
+        for (int i = 0; i < attrCount; i++)
         {
             reader.MoveToAttribute(i);
+            var name = reader.Name;
+            var value = reader.Value;
 
-            switch (reader.Name)
+            switch (name)
             {
                 case "__type":
-                    context.TypeStr = reader.Value;
+                    context.TypeStr = value;
                     break;
                 case "__count":
-                    context.ArrayCountStr = reader.Value;
+                    context.ArrayCountStr = value;
                     break;
                 case "__size":
                     // ignore
                     break;
                 default:
-                    context.HoldingAttributes.Add(new KeyValuePair<string, string>(
-                        KbinConverter.GetActualName(reader.Name, writeOptions.RepairedPrefix),
-                        reader.Value));
+                    context.PendingAttributes.Add(
+                        new KeyValuePair<string, string>(KbinConverter.GetActualName(name, repairedPrefix), value));
                     break;
             }
         }
@@ -265,11 +273,11 @@ public static class KBinWriter
     private ref struct WriteContext
     {
         public readonly WriteOptions WriteOptions;
-        public readonly List<KeyValuePair<string, string>> HoldingAttributes;
+        public readonly List<KeyValuePair<string, string>> PendingAttributes;
         public NodeWriter NodeWriter;
         public DataWriter DataWriter;
 
-        public string HoldingValue;
+        public string PendingValue;
         public string? TypeStr;
         public string? ArrayCountStr;
         public byte TypeId;
@@ -280,21 +288,21 @@ public static class KBinWriter
             DataWriter = dataWriter;
             WriteOptions = writeOptions;
 
-            HoldingAttributes = new List<KeyValuePair<string, string>>(8); // 预分配一个合理容量
-            HoldingValue = string.Empty;
+            PendingAttributes = new List<KeyValuePair<string, string>>(8); // 预分配一个合理容量
+            PendingValue = string.Empty;
             TypeStr = null;
             ArrayCountStr = null;
             TypeId = 0;
         }
 
-        public void ProcessHolding()
+        public void FlushPendingData()
         {
             if (TypeStr != null)
             {
                 ProcessTypeData();
             }
 
-            if (HoldingAttributes.Count > 0)
+            if (PendingAttributes.Count > 0)
             {
                 ProcessAttributes();
             }
@@ -306,10 +314,10 @@ public static class KBinWriter
             switch (TypeStr)
             {
                 case "str":
-                    DataWriter.WriteString(HoldingValue);
+                    DataWriter.WriteString(PendingValue);
                     break;
                 case "bin":
-                    DataWriter.WriteBinary(HoldingValue);
+                    DataWriter.WriteBinary(PendingValue);
                     break;
                 default:
                     ProcessComplexTypeData();
@@ -319,35 +327,34 @@ public static class KBinWriter
             // 重置状态
             TypeStr = null;
             ArrayCountStr = null;
-            HoldingValue = string.Empty;
+            PendingValue = string.Empty;
             TypeId = 0;
         }
 
         private void ProcessComplexTypeData()
         {
             var type = NodeTypeFactory.GetNodeType(TypeId);
-            var values = HoldingValue.SpanSplit(' '); // 已优化为Span操作
+            var values = PendingValue.SpanSplit(' '); // 已优化为Span操作
 
-            var requiredBytes = (uint)(type.Size * type.Count);
+            var typeSize = type.Size;
+            var requiredBytes = (uint)(typeSize * type.Count);
             if (ArrayCountStr != null)
             {
-                if (uint.TryParse(ArrayCountStr, out var count))
-                {
-                    requiredBytes *= count;
-                    DataWriter.WriteU32(requiredBytes);
-                }
-                else
+                if (!uint.TryParse(ArrayCountStr, out var count))
                 {
                     throw new KbinException($"Invalid array count: {ArrayCountStr}");
                 }
+
+                requiredBytes *= count;
+                DataWriter.WriteU32(requiredBytes);
             }
 
             if (requiredBytes > int.MaxValue)
-                throw new KbinException("uint size is greater than int.MaxValue");
+            {
+                throw new KbinException("Required bytes exceed maximum array size");
+            }
 
             var iRequiredBytes = (int)requiredBytes;
-            //var span = DataWriter.Stream.GetSpan(iRequiredBytes);
-            //Action<Span<byte>> ok = (span) => { };
             // 避免小数组的堆分配
             byte[]? arr = null;
             var span = iRequiredBytes <= Constants.MaxStackLength
@@ -359,25 +366,28 @@ public static class KBinWriter
             try
             {
                 int bytesWritten = 0;
+                var strictMode = WriteOptions.StrictMode;
                 foreach (var s in values)
                 {
                     try
                     {
-                        if (bytesWritten == requiredBytes)
+                        if (bytesWritten == iRequiredBytes)
                         {
-                            if (WriteOptions.StrictMode)
-                                throw new KbinArrayCountMissMatchException(ArrayCountStr, HoldingValue.Split(' ').Length);
+                            if (strictMode)
+                            {
+                                throw new KbinArrayCountMissMatchException(ArrayCountStr, PendingValue.Split(' ').Length);
+                            }
+
                             break;
                         }
 
                         var add = type.WriteString(ref builder, s);
-                        if (add < type.Size)
+                        if (add < typeSize)
                         {
-                            var left = type.Size - add;
-                            for (var j = 0; j < left; j++) builder.Append(0);
+                            builder.AppendZeros(typeSize - add);
                         }
 
-                        bytesWritten += type.Size;
+                        bytesWritten += typeSize;
                     }
                     catch (Exception e)
                     {
@@ -387,29 +397,29 @@ public static class KBinWriter
                     }
                 }
 
-                // 确保达到要求的字节数
-                if (bytesWritten != requiredBytes)
+                // 处理可能的字节数不足情况
+                if (bytesWritten != iRequiredBytes)
                 {
-                    if (WriteOptions.StrictMode)
+                    if (strictMode)
                     {
-                        throw new KbinArrayCountMissMatchException(ArrayCountStr, builder.Length / type.Size);
+                        throw new KbinArrayCountMissMatchException(ArrayCountStr, builder.Length / typeSize);
                     }
 
                     // 填充剩余字节
-                    while (bytesWritten < requiredBytes)
-                    {
-                        builder.Append(0);
-                        bytesWritten++;
-                    }
+                    builder.AppendZeros(iRequiredBytes - bytesWritten);
                 }
 
                 // 根据是否为数组选择合适的写入方法
                 // If array, force write 32bit
                 var builderSpan = builder.AsSpan();
                 if (ArrayCountStr != null)
+                {
                     DataWriter.Write32BitAligned(builderSpan);
+                }
                 else
+                {
                     DataWriter.WriteBytes(builderSpan);
+                }
             }
             finally
             {
@@ -421,16 +431,16 @@ public static class KBinWriter
         private void ProcessAttributes()
         {
             // Xml Attribute排序
-            HoldingAttributes.Sort(static (a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
+            PendingAttributes.Sort(static (a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
 
-            foreach (var attribute in HoldingAttributes)
+            foreach (var attribute in PendingAttributes)
             {
                 NodeWriter.WriteU8(0x2E);
                 NodeWriter.WriteString(attribute.Key);
                 DataWriter.WriteString(attribute.Value);
             }
 
-            HoldingAttributes.Clear();
+            PendingAttributes.Clear();
         }
     }
 }
