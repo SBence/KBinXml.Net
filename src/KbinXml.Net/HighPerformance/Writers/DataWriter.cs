@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using KbinXml.Net.Utils;
@@ -56,27 +57,22 @@ internal struct DataWriter : IKBinWriter, IDisposable
 
         // 准备写入数据（32位对齐）
         ref var pointer = ref _pos32;
-        PadStream(_pos32);
+        var increment = GetIncrementLength(pointer);
 
-        // 获取足够大小的Span
-        if (pointer == Stream.Length)
+        // 获取足够大小的Span并写入数据
+        if (increment >= 0)
         {
-            WriteStringCore(value, byteCount);
-
-            pointer += byteCount;
+            WriteStringCore(value, increment, byteCount);
         }
         else
         {
             var streamPosition = Stream.Position;
             Stream.Position = pointer;
-
-            WriteStringCore(value, byteCount);
-
-            pointer += byteCount;
+            WriteStringCore(value, 0, byteCount);
             Stream.Position = streamPosition;
         }
 
-        // 处理对齐
+        pointer += byteCount;
         AlignTo4Bytes(ref pointer);
         Realign16_8();
     }
@@ -92,26 +88,22 @@ internal struct DataWriter : IKBinWriter, IDisposable
 
         // 准备写入数据（32位对齐）
         ref var pointer = ref _pos32;
-        PadStream(pointer);
+        var increment = GetIncrementLength(pointer);
 
         // 获取足够大小的Span并写入数据
-        if (pointer == Stream.Length)
+        if (increment >= 0)
         {
-            WriteBinaryCore(value, length);
-
-            pointer += length;
+            WriteBinaryCore(value, increment, length);
         }
         else
         {
             var streamPosition = Stream.Position;
             Stream.Position = pointer;
-
-            WriteBinaryCore(value, length);
-
-            pointer += length;
+            WriteBinaryCore(value, 0, length);
             Stream.Position = streamPosition;
         }
 
+        pointer += length;
         AlignTo4Bytes(ref pointer);
         Realign16_8();
     }
@@ -119,14 +111,14 @@ internal struct DataWriter : IKBinWriter, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write8BitAligned(byte value)
     {
-        PadStream(_pos8);
+        var increment = GetIncrementLength(_pos8);
 
         if ((_pos8 & 3) == 0)
         {
             _pos32 += 4;
         }
 
-        WriteSingleByte(value, ref _pos8);
+        WriteSingleByte(value, increment, ref _pos8);
 
         Realign16_8();
     }
@@ -134,14 +126,14 @@ internal struct DataWriter : IKBinWriter, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write16BitAligned(scoped ReadOnlySpan<byte> buffer)
     {
-        PadStream(_pos16);
+        var increment = GetIncrementLength(_pos16);
 
         if ((_pos16 & 3) == 0)
         {
             _pos32 += 4;
         }
 
-        WriteMultiBytes(buffer, ref _pos16);
+        WriteMultiBytes(buffer, increment, ref _pos16);
 
         Realign16_8();
     }
@@ -149,12 +141,11 @@ internal struct DataWriter : IKBinWriter, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Write32BitAligned(scoped ReadOnlySpan<byte> streamRentBuffer)
     {
-        ref var pointer = ref _pos32;
-        PadStream(pointer);
+        var increment = GetIncrementLength(_pos32);
 
-        WriteMultiBytes(streamRentBuffer, ref pointer);
+        WriteMultiBytes(streamRentBuffer, increment, ref _pos32);
 
-        AlignTo4Bytes(ref pointer);
+        AlignTo4Bytes(ref _pos32);
 
         Realign16_8();
     }
@@ -186,39 +177,10 @@ internal struct DataWriter : IKBinWriter, IDisposable
         Write16BitAlignedInternal(value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteU16(ushort value)
     {
-        const int size = sizeof(ushort);
-        ref var pointer = ref _pos16;
-        PadStream(pointer);
-
-        if ((pointer & 3) == 0) // pointer % 4
-        {
-            _pos32 += 4;
-        }
-
-        if (pointer == Stream.Length)
-        {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytesT(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-            Stream.Position = pointer;
-
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytesT(span, value);
-            Stream.Advance(size);
-
-            pointer += size;
-            Stream.Position = streamPosition;
-        }
-
-        Realign16_8();
+        Write16BitAlignedInternal(value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -253,26 +215,35 @@ internal struct DataWriter : IKBinWriter, IDisposable
     private void Write16BitAlignedInternal<T>(T value) where T : unmanaged
     {
         // 统一实现16位写入的核心逻辑
-        //int size = Unsafe.SizeOf<T>();
-        int size = 2; // sizeof(short) or sizeof(ushort)
+        const int size = 2; // sizeof(short) or sizeof(ushort)
         ref var pointer = ref _pos16;
-        PadStream(pointer);
+        var increment = GetIncrementLength(pointer);
 
         if ((pointer & 3) == 0) // 如果16位指针是4字节对齐的
         {
             _pos32 += 4;
         }
 
-        if (pointer == Stream.Length)
+        // 合并increment==0和increment>0的分支逻辑
+        if (increment >= 0)
         {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytesT(span, value);
-            Stream.Advance(size);
+            var sizeHint = increment + size;
+            var span = Stream.GetSpan(sizeHint);
+            if (increment > 0)
+            {
+                span.Slice(0, increment).Clear();
+                BitConverterHelper.WriteBeBytesT(span.Slice(increment), value);
+            }
+            else
+            {
+                BitConverterHelper.WriteBeBytesT(span, value);
+            }
 
-            pointer += size;
+            Stream.Advance(sizeHint);
         }
         else
         {
+            Debug.Assert(false);
             var streamPosition = Stream.Position;
             Stream.Position = pointer;
 
@@ -280,10 +251,10 @@ internal struct DataWriter : IKBinWriter, IDisposable
             BitConverterHelper.WriteBeBytesT(span, value);
             Stream.Advance(size);
 
-            pointer += size;
             Stream.Position = streamPosition;
         }
 
+        pointer += size;
         Realign16_8();
     }
 
@@ -291,18 +262,28 @@ internal struct DataWriter : IKBinWriter, IDisposable
     {
         int size = Unsafe.SizeOf<T>();
         ref var pointer = ref _pos32;
-        PadStream(pointer);
+        var increment = GetIncrementLength(pointer);
 
-        if (pointer == Stream.Length)
+        // 合并increment==0和increment>0的分支逻辑
+        if (increment >= 0)
         {
-            var span = Stream.GetSpan(size);
-            BitConverterHelper.WriteBeBytesT(span, value);
-            Stream.Advance(size);
+            var sizeHint = increment + size;
+            var span = Stream.GetSpan(sizeHint);
+            if (increment > 0)
+            {
+                span.Slice(0, increment).Clear();
+                BitConverterHelper.WriteBeBytesT(span.Slice(increment), value);
+            }
+            else
+            {
+                BitConverterHelper.WriteBeBytesT(span, value);
+            }
 
-            pointer += size;
+            Stream.Advance(sizeHint);
         }
         else
         {
+            Debug.Assert(false);
             var streamPosition = Stream.Position;
             Stream.Position = pointer;
 
@@ -310,23 +291,26 @@ internal struct DataWriter : IKBinWriter, IDisposable
             BitConverterHelper.WriteBeBytesT(span, value);
             Stream.Advance(size);
 
-            pointer += size;
             Stream.Position = streamPosition;
         }
 
-        var left = pointer & 3;
-        if (left != 0)
-        {
-            pointer += 4 - left;
-        }
-
+        pointer += size;
+        AlignTo4Bytes(ref pointer);
         Realign16_8();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void WriteStringCore(string value, int byteCount)
+    private void WriteStringCore(string value, int increment, int byteCount)
     {
-        var span = Stream.GetSpan(byteCount);
+        var sizeHint = increment > 0 ? byteCount + increment : byteCount;
+        var span = Stream.GetSpan(sizeHint);
+
+        if (increment > 0)
+        {
+            span.Slice(0, increment).Clear();
+            span = span.Slice(increment);
+        }
+
 #if NETCOREAPP3_1_OR_GREATER
         int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
         span[bytesWritten] = 0; // 添加结尾的0字节
@@ -335,71 +319,94 @@ internal struct DataWriter : IKBinWriter, IDisposable
         bytes.CopyTo(span);
         span[bytes.Length] = 0; // 添加结尾的0字节
 #endif
-        Stream.Advance(byteCount);
+        Stream.Advance(sizeHint);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void WriteBinaryCore(string value, int length)
+    private void WriteBinaryCore(string value, int increment, int length)
     {
-        var span = Stream.GetSpan(length);
-        HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
-        Stream.Advance(length);
-    }
+        var sizeHint = increment > 0 ? length + increment : length;
+        var span = Stream.GetSpan(sizeHint);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void WriteMultiBytes(scoped ReadOnlySpan<byte> buffer, ref int pointer)
-    {
-        if (pointer == Stream.Length)
+        if (increment > 0)
         {
-            Stream.WriteSpan(buffer);
-            pointer += buffer.Length;
+            span.Slice(0, increment).Clear();
+            span = span.Slice(increment);
+        }
+
+        HexConverter.TryDecodeFromUtf16(value.AsSpan(), span.Slice(0, length));
+        Stream.Advance(sizeHint);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteSingleByte(byte value, int increment, ref int pointer)
+    {
+        if (increment >= 0)
+        {
+            var sizeHint = increment + 1;
+            var span = Stream.GetSpan(sizeHint);
+            if (increment > 0)
+            {
+                span.Slice(0, increment).Clear();
+                span[increment] = value;
+            }
+            else
+            {
+                span[0] = value;
+            }
+
+            Stream.Advance(sizeHint);
         }
         else
         {
             var streamPosition = Stream.Position;
-
             Stream.Position = pointer;
-            Stream.WriteSpan(buffer);
-            pointer += buffer.Length;
+            Stream.WriteByte(value);
+            Stream.Position = streamPosition;
+        }
+
+        pointer += 1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteMultiBytes(scoped ReadOnlySpan<byte> buffer, int increment, ref int pointer)
+    {
+        if (increment >= 0)
+        {
+            var length = buffer.Length;
+            var sizeHint = increment + length;
+            var span = Stream.GetSpan(sizeHint);
+            if (increment > 0)
+            {
+                span.Slice(0, increment).Clear();
+                buffer.CopyTo(span.Slice(increment));
+            }
+            else
+            {
+                buffer.CopyTo(span);
+            }
+
+            Stream.Advance(sizeHint);
+        }
+        else
+        {
+            var streamPosition = Stream.Position;
+            Stream.Position = pointer;
+            Stream.Write(buffer);
 
             // fix the problem if the buffer length is greater than list count
             // but looks safe for kbin algorithm
             //if (offset <= Stream.Length)
             Stream.Position = streamPosition;
         }
+
+        pointer += buffer.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void WriteSingleByte(byte value, ref int pointer)
+    private int GetIncrementLength(int pointer)
     {
-        if (pointer == Stream.Length)
-        {
-            Stream.WriteByte(value);
-            pointer += 1;
-        }
-        else
-        {
-            var streamPosition = Stream.Position;
-
-            Stream.Position = pointer;
-            Stream.WriteByte(value);
-            pointer += 1;
-
-            Stream.Position = streamPosition;
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void PadStream(int pointer)
-    {
-        int incrementLength = (int)(pointer - Stream.Length);
-        if (incrementLength <= 0) return;
-        if (incrementLength == 1) Stream.WriteByte(0);
-        else
-        {
-            Stream.GetSpan(incrementLength).Slice(0, incrementLength).Clear();
-            Stream.Advance(incrementLength);
-        }
+        return (int)(pointer - Stream.Length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

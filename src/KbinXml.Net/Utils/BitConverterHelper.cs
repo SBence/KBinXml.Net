@@ -64,18 +64,20 @@ public static class BitConverterHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int WriteBeBytesT<T>(Span<byte> span, T value)
+    public static int WriteBeBytesT<T>(Span<byte> span, T value) where T : unmanaged
     {
-        if (typeof(T) == typeof(ushort)) return WriteBeBytes(span, Unsafe.As<T, ushort>(ref value));
-        if (typeof(T) == typeof(short)) return WriteBeBytes(span, Unsafe.As<T, short>(ref value));
-        if (typeof(T) == typeof(uint)) return WriteBeBytes(span, Unsafe.As<T, uint>(ref value));
-        if (typeof(T) == typeof(int)) return WriteBeBytes(span, Unsafe.As<T, int>(ref value));
-        if (typeof(T) == typeof(ulong)) return WriteBeBytes(span, Unsafe.As<T, ulong>(ref value));
-        if (typeof(T) == typeof(long)) return WriteBeBytes(span, Unsafe.As<T, long>(ref value));
-        if (typeof(T) == typeof(float)) return WriteBeBytes(span, Unsafe.As<T, float>(ref value));
-        if (typeof(T) == typeof(double)) return WriteBeBytes(span, Unsafe.As<T, double>(ref value));
-
-        throw new ArgumentOutOfRangeException();
+        return Type.GetTypeCode(typeof(T)) switch
+        {
+            TypeCode.UInt16 => WriteBeBytes(span, Unsafe.As<T, ushort>(ref value)),
+            TypeCode.Int16 => WriteBeBytes(span, Unsafe.As<T, short>(ref value)),
+            TypeCode.UInt32 => WriteBeBytes(span, Unsafe.As<T, uint>(ref value)),
+            TypeCode.Int32 => WriteBeBytes(span, Unsafe.As<T, int>(ref value)),
+            TypeCode.UInt64 => WriteBeBytes(span, Unsafe.As<T, ulong>(ref value)),
+            TypeCode.Int64 => WriteBeBytes(span, Unsafe.As<T, long>(ref value)),
+            TypeCode.Single => WriteBeBytes(span, Unsafe.As<T, float>(ref value)),
+            TypeCode.Double => WriteBeBytes(span, Unsafe.As<T, double>(ref value)),
+            _ => throw new ArgumentOutOfRangeException(nameof(value), typeof(T), "Unsupported type")
+        };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
