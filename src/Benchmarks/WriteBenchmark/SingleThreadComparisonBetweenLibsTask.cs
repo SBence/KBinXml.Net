@@ -50,7 +50,7 @@ public class SingleThreadComparisonBetweenLibsTask
     }
 
     [Benchmark(Baseline = true)]
-    public object? WriteLinq_NKZsmos_old()
+    public object? WriteLinq_NKZsmos_v1_1()
     {
         return old::KbinXml.Net.KbinConverter.Write(_linq, old::KbinXml.Net.KnownEncodings.UTF8);
     }

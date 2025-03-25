@@ -49,7 +49,7 @@ public class SingleThreadComparisonBetweenLibsTask
     }
 
     [Benchmark]
-    public object? ReadLinq_NKZsmos_old()
+    public object? ReadLinq_NKZsmos_v1_1()
     {
         return old::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
     }
