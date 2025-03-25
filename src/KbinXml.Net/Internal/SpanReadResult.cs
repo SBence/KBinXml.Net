@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace KbinXml.Net.HighPerformance;
+namespace KbinXml.Net.Internal;
 
-public readonly ref struct SpanReadResult
+internal readonly ref struct SpanReadResult
 {
     public readonly ReadOnlySpan<byte> Span;
 #if USELOG

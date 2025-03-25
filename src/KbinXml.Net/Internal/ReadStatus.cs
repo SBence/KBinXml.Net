@@ -1,6 +1,6 @@
-﻿namespace KbinXml.Net.HighPerformance;
+﻿namespace KbinXml.Net.Internal;
 
-public ref struct ReadStatus
+internal ref struct ReadStatus
 {
     public int Offset { get; set; }
     public int Length { get; set; }

@@ -2,7 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
-using KbinXml.Net;
+using KbinXml.Net.Internal.Writers;
 using ReadBenchmark;
 
 BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
@@ -14,7 +14,7 @@ public class NodeWriterU8Task
     [Benchmark(Baseline = true)]
     public object? V1()
     {
-        var nodeWriter = new KbinXml.Net.Internal.Writers.NodeWriter(true, Encoding.UTF8, 128 * 1024);
+        var nodeWriter = new NodeWriter(true, Encoding.UTF8, 128 * 1024);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteByte(0x80);
         return nodeWriter.Stream.GetBuffer();
@@ -23,7 +23,7 @@ public class NodeWriterU8Task
     [Benchmark]
     public object? V2()
     {
-        var nodeWriter = new KbinXml.Net.HighPerformance.Writers.NodeWriter(true, Encoding.UTF8);
+        var nodeWriter = new NodeWriter(true, Encoding.UTF8);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteByte(0x80);
         return nodeWriter.Stream.GetBuffer();
@@ -37,7 +37,7 @@ public class DataWriterU8Task
     [Benchmark(Baseline = true)]
     public object? V1()
     {
-        var nodeWriter = new KbinXml.Net.Internal.Writers.DataWriter(Encoding.UTF8, 128 * 1024);
+        var nodeWriter = new DataWriter(Encoding.UTF8, 128 * 1024);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteByte(0x80);
         return nodeWriter.Stream.GetBuffer();
@@ -46,7 +46,7 @@ public class DataWriterU8Task
     [Benchmark]
     public object? V2()
     {
-        var nodeWriter = new KbinXml.Net.HighPerformance.Writers.DataWriter(Encoding.UTF8);
+        var nodeWriter = new DataWriter(Encoding.UTF8);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteByte(0x80);
         return nodeWriter.Stream.GetBuffer();
@@ -60,7 +60,7 @@ public class DataWriterU16Task
     [Benchmark(Baseline = true)]
     public object? V1()
     {
-        var nodeWriter = new KbinXml.Net.Internal.Writers.DataWriter(Encoding.UTF8, 128 * 1024);
+        var nodeWriter = new DataWriter(Encoding.UTF8, 128 * 1024);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteU16(11451);
         return nodeWriter.Stream.GetBuffer();
@@ -69,7 +69,7 @@ public class DataWriterU16Task
     [Benchmark]
     public object? V2()
     {
-        var nodeWriter = new KbinXml.Net.HighPerformance.Writers.DataWriter(Encoding.UTF8);
+        var nodeWriter = new DataWriter(Encoding.UTF8);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteU16(11451);
         return nodeWriter.Stream.GetBuffer();
@@ -83,7 +83,7 @@ public class DataWriterU32Task
     [Benchmark(Baseline = true)]
     public object? V1()
     {
-        var nodeWriter = new KbinXml.Net.Internal.Writers.DataWriter(Encoding.UTF8, 128 * 1024);
+        var nodeWriter = new DataWriter(Encoding.UTF8, 128 * 1024);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteU32(11451);
         return nodeWriter.Stream.GetBuffer();
@@ -92,7 +92,7 @@ public class DataWriterU32Task
     [Benchmark]
     public object? V2()
     {
-        var nodeWriter = new KbinXml.Net.HighPerformance.Writers.DataWriter(Encoding.UTF8);
+        var nodeWriter = new DataWriter(Encoding.UTF8);
         for (int i = 0; i < 100_000; i++)
             nodeWriter.WriteU32(11451);
         return nodeWriter.Stream.GetBuffer();
@@ -108,7 +108,7 @@ public class DataWriterU32Task_Multi
     {
         return MultiThreadUtils.DoMultiThreadWork(_ =>
         {
-            var nodeWriter = new KbinXml.Net.Internal.Writers.DataWriter(Encoding.UTF8, 128 * 1024);
+            var nodeWriter = new DataWriter(Encoding.UTF8, 128 * 1024);
             for (int i = 0; i < 100_000; i++)
                 nodeWriter.WriteU32(11451);
             return nodeWriter.Stream.GetBuffer();
@@ -121,7 +121,7 @@ public class DataWriterU32Task_Multi
     {
         return MultiThreadUtils.DoMultiThreadWork(_ =>
         {
-            var nodeWriter = new KbinXml.Net.HighPerformance.Writers.DataWriter(Encoding.UTF8);
+            var nodeWriter = new DataWriter(Encoding.UTF8);
             for (int i = 0; i < 100_000; i++)
                 nodeWriter.WriteU32(11451);
             return nodeWriter.Stream.GetBuffer();

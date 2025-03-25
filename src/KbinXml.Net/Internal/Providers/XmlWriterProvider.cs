@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
+using KbinXml.Net.Utils;
 
 namespace KbinXml.Net.Internal.Providers;
 

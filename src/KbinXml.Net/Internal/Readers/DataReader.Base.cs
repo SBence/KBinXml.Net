@@ -1,6 +1,6 @@
 ﻿using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.HighPerformance.Readers;
+namespace KbinXml.Net.Internal.Readers;
 
 internal partial struct DataReader
 {

@@ -6,7 +6,6 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using KbinXml.Net;
-using KbinXml.Net.HighPerformance;
 using kbinxmlcs;
 
 #if NETCOREAPP
@@ -46,12 +45,6 @@ public class SingleThreadComparisonBetweenLibsTask
     public object? WriteLinq_NKZsmos()
     {
         return KbinConverter.Write(_linq, KnownEncodings.UTF8);
-    }
-
-    [Benchmark]
-    public object? WriteLinq_NKZsmosNew()
-    {
-        return KBinWriter.Write(_linq, KnownEncodings.UTF8);
     }
 
     [Benchmark]

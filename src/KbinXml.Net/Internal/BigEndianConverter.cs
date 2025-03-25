@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.HighPerformance;
+namespace KbinXml.Net.Internal;
 
 internal static class BigEndianConverter
 {

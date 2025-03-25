@@ -6,7 +6,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using KbinXml.Net;
-using KbinXml.Net.HighPerformance;
 using kbinxmlcs;
 using Microsoft.IO;
 
@@ -95,7 +94,7 @@ public class Program
             {
 
             }
-            var _kbin = KBinWriter.Write(smallText, KnownEncodings.ShiftJIS);
+            var _kbin = KbinConverter.Write(smallText, KnownEncodings.ShiftJIS);
             //var linq = KbinConverter.ReadXmlLinq(_kbin);
             //var _xmlStr = linq.ToString();
             //KbinConverter.Write(_xmlStr, KnownEncodings.ShiftJIS, new WriteOptions { RepairedPrefix = "PREFIX_" });

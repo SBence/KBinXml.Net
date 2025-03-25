@@ -1,8 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using KbinXml.Net;
-using KbinXml.Net.HighPerformance;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -178,24 +178,19 @@ namespace GeneralUnitTests
         {
             var xml = XElement.Parse(value);
             var compress = true;
-            //var bytes = new StableKbin.XmlWriter(xml, Encoding.UTF8, compress).Write();
+            var bytes = new StableKbin.XmlWriter(xml, Encoding.UTF8, compress).Write();
             var bytes2 = KbinConverter.Write(xml, KnownEncodings.UTF8, new WriteOptions() { Compress = compress, StrictMode = false });
-            var bytes3 = KBinWriter.Write(xml, KnownEncodings.UTF8, new WriteOptions() { Compress = compress, StrictMode = false });
-            
-            //var result = new StableKbin.XmlReader(bytes).ReadLinq().ToString();
-            var result2 = KbinConverter.ReadXmlLinq(bytes2).ToString();
-            var result3 = KBinReader.ReadXmlLinq(bytes2).ToString();
 
+            var result = new StableKbin.XmlReader(bytes).ReadLinq().ToString();
+            var result2 = KbinConverter.ReadXmlLinq(bytes2.AsSpan()).ToString();
+
+            _outputHelper.WriteLine(string.Join(", ", bytes.Select((k, i) => $"{i}: 0x{k:X2}")));
             _outputHelper.WriteLine(string.Join(", ", bytes2.Select((k, i) => $"{i}: 0x{k:X2}")));
-            _outputHelper.WriteLine(string.Join(", ", bytes3.Select((k, i) => $"{i}: 0x{k:X2}")));
 
-            //_outputHelper.WriteLine(result);
+            _outputHelper.WriteLine(result);
             _outputHelper.WriteLine(result2);
-            _outputHelper.WriteLine(result3);
-            //Assert.Equal(bytes, bytes2);
-            Assert.Equal(bytes2, bytes3);
-            //Assert.Equal(result, result2);
-            Assert.Equal(result2, result3);
+            Assert.Equal(bytes, bytes2);
+            Assert.Equal(result, result2);
         }
     }
 }

@@ -5,7 +5,6 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 using KbinXml.Net;
-using KbinXml.Net.HighPerformance;
 using kbinxmlcs;
 
 #if NETCOREAPP
@@ -45,12 +44,6 @@ public class SingleThreadComparisonBetweenLibsTask
     public object? ReadLinq_NKZsmos()
     {
         return KbinConverter.ReadXmlLinq(_kbin);
-    }
-
-    [Benchmark]
-    public object? ReadLinq_NKZsmosNew()
-    {
-        return KBinReader.ReadXmlLinq(_kbin);
     }
 
     [Benchmark]

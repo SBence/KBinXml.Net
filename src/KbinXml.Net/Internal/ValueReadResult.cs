@@ -1,6 +1,6 @@
-﻿namespace KbinXml.Net.HighPerformance;
+﻿namespace KbinXml.Net.Internal;
 
-public readonly ref struct ValueReadResult<T>
+internal readonly ref struct ValueReadResult<T>
 {
     public readonly T Value;
 #if USELOG

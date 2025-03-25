@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using KbinXml.Net.Utils;
 using Microsoft.IO;
 
-namespace KbinXml.Net.HighPerformance.Writers;
+namespace KbinXml.Net.Internal.Writers;
 
 internal readonly ref struct BigEndianWriter : IKBinWriter, IDisposable
 {

@@ -5,153 +5,180 @@ using KbinXml.Net.Utils;
 
 namespace KbinXml.Net.Internal.Readers;
 
-internal class DataReader : BeBinaryReader
+internal ref partial struct DataReader : IKBinReader
 {
+    private readonly ReadOnlySpan<byte> _span;
     private readonly Encoding _encoding;
+
+    private int _pos;
     private int _pos16;
     private int _pos8;
 
-    public DataReader(ReadOnlyMemory<byte> buffer, int baseOffset, Encoding encoding) : base(buffer, baseOffset)
+    public DataReader(ReadOnlySpan<byte> span, Encoding encoding)
     {
+        _span = span;
         _encoding = encoding;
     }
 
-    //public int Position32 => _position + BaseOffset;
-    //public int Position16 => _pos16 + BaseOffset;
-    //public int Position8 => _pos8 + BaseOffset;
+    public SpanReadResult ReadBytes(int count)
+    {
+        return count switch
+        {
+            1 => ReadBytes8BitAligned(),
+            2 => ReadBytes16BitAligned(),
+            _ => ReadBytes32BitAligned(count)
+        };
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlyMemory<byte> Read32BitAligned(int count, out int position, out string flag)
+    public SpanReadResult ReadBytes8BitAligned()
     {
+        // Realign before read.
+        // If need to, align pos8 to next 4-bytes chunk, and move the generic position to next chunk
+        AlignPosition(ref _pos8);
+
+        var span = ReadBytesSafe(_pos8, 1);
+        var result = new SpanReadResult
+        (
+            span
 #if USELOG
-        position = _position + BaseOffset;
-#else
-        position = _position;
+            , new ReadStatus { Flag = "p8", Offset = _pos8, Length = 1 }
 #endif
-        flag = "p32";
-        var result = ReadBytes(_position, count);
+        );
+
+        _pos8++;
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SpanReadResult ReadBytes16BitAligned()
+    {
+        // Realign before read.
+        // If need to, align pos16 to next 4-bytes chunk, and move the generic position to next chunk
+        AlignPosition(ref _pos16);
+
+        var span = ReadBytesSafe(_pos16, 2);
+        var result = new SpanReadResult
+        (
+            span
+#if USELOG
+            , new ReadStatus { Flag = "p16", Offset = _pos16, Length = 2 }
+#endif
+        );
+
+        _pos16 += 2;
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public SpanReadResult ReadBytes32BitAligned(int count)
+    {
+        var span = ReadBytesSafe(_pos, count);
+        var result = new SpanReadResult
+        (
+            span
+#if USELOG
+            , new ReadStatus { Flag = "p32", Offset = _pos, Length = count }
+#endif
+        );
+
         //var left = count & 3;
         //if (left != 0)
         //{
         //    count += (4 - left);
         //}
 
-        //_position += count;
-        _position += count + 3 & ~3; // 等价于向上取整到4的倍数
+        //_pos += count;
+        _pos += count + 3 & ~3; // 向上取整到4的倍数
         return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlyMemory<byte> Read16BitAligned(out int position, out string flag)
+    public unsafe ValueReadResult<string> ReadString(int count)
     {
-        flag = "p16";
-        // Realign before read.
-        // If need to, align pos16 to next 4-bytes chunk, and move the generic position to next chunk
-        AlignPosition(ref _pos16, flag);
-        position = GetAlignedPosition(_pos16);
-
-        var result = ReadBytes(_pos16, 2);
-        _pos16 += 2;
-
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlyMemory<byte> Read8BitAligned(out int position, out string flag)
-    {
-        flag = "p8";
-        // Realign before read.
-        // If need to, align pos8 to next 4-bytes chunk, and move the generic position to next chunk
-        AlignPosition(ref _pos8, flag);
-        position = GetAlignedPosition(_pos8);
-
-        var result = ReadBytes(_pos8, 1);
-        _pos8++;
-
-        return result;
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public override ReadOnlyMemory<byte> ReadBytes(int count, out int position, out string flag)
-    {
-        return count switch
-        {
-            1 => Read8BitAligned(out position, out flag),
-            2 => Read16BitAligned(out position, out flag),
-            _ => Read32BitAligned(count, out position, out flag)
-        };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ReadString(int count, out int position, out string flag)
-    {
-        var memory = Read32BitAligned(count, out position, out flag);
-        var span = memory.Span.Slice(0, memory.Length - 1);
+        var spanResult = ReadBytes32BitAligned(count);
+        var span = spanResult.Span.Slice(0, spanResult.Span.Length - 1);
         if (span.Length == 0)
-            return string.Empty;
+        {
+            return new ValueReadResult<string>
+            (
+                string.Empty
+#if USELOG
+                , spanResult.ReadStatus
+#endif
+            );
+        }
 
 #if NETCOREAPP3_1_OR_GREATER
-        return _encoding.GetString(span);
+        return new ValueReadResult<string>
+        (
+            _encoding.GetString(span)
+#if USELOG
+            , spanResult.ReadStatus
+#endif
+        );
 #elif NETSTANDARD2_0 || NET46_OR_GREATER
-        unsafe
+        fixed (byte* p = span)
         {
-            fixed (byte* p = span)
-                return _encoding.GetString(p, span.Length);
+            return new ValueReadResult<string>
+            (
+                _encoding.GetString(p, span.Length)
+#if USELOG
+                , spanResult.ReadStatus
+#endif
+            );
         }
-#else
-        return _encoding.GetString(span.ToArray());
 #endif
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ReadBinary(int count, out int position, out string flag)
+    public ValueReadResult<string> ReadBinary(int count)
     {
-        var bin = Read32BitAligned(count, out position, out flag);
-        if (bin.Length == 0)
-            return string.Empty;
-        return ConvertHelper.ToHexString(bin.Span);
+        var spanResult = ReadBytes32BitAligned(count);
+        if (spanResult.Span.Length == 0)
+        {
+            return new ValueReadResult<string>
+            (
+                string.Empty
+#if USELOG
+                , spanResult.ReadStatus
+#endif
+            );
+        }
+
+        return new ValueReadResult<string>
+        (
+            ConvertHelper.ToHexString(spanResult.Span)
+#if USELOG
+            , spanResult.ReadStatus
+#endif
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ReadOnlyMemory<byte> ReadBytes(int offset, int count)
+    private ReadOnlySpan<byte> ReadBytesSafe(int offset, int count)
     {
         int actualCount;
-        if (count + offset > Buffer.Length)
-            actualCount = Buffer.Length - offset;
+        if (count + offset > _span.Length)
+        {
+            actualCount = _span.Length - offset;
+        }
         else
+        {
             actualCount = count;
-        var slice = Buffer.Slice(offset, actualCount);
+        }
+
+        var slice = _span.Slice(offset, actualCount);
         return slice;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AlignPosition(ref int alignedPos, string pointerName)
+    private void AlignPosition(ref int alignedPos)
     {
         if ((alignedPos & 3) == 0)
         {
-#if USELOG
-            if (alignedPos != _position)
-            {
-                var pos = alignedPos;
-                KbinConverter.Logger.Log(() => $"---> {pointerName} from {pos + BaseOffset:X8} to {_position + BaseOffset:X8}");
-            }
-#endif
-            alignedPos = _position;
-#if USELOG
-            KbinConverter.Logger.Log(() => $"---> p32 from {_position + BaseOffset:X8} to {_position + BaseOffset + 4:X8}");
-#endif
-            _position += 4;
+            alignedPos = _pos;
+            _pos += 4;
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int GetAlignedPosition(int alignedPos)
-    {
-#if USELOG
-        return alignedPos + BaseOffset;
-#else
-        return alignedPos;
-#endif
     }
 }

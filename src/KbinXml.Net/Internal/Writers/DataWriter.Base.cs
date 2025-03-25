@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.HighPerformance.Writers;
+namespace KbinXml.Net.Internal.Writers;
 
 internal partial struct DataWriter
 {

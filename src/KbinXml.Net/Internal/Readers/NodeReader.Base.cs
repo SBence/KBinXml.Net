@@ -1,19 +1,9 @@
-﻿using System;
-using KbinXml.Net.Utils;
+﻿using KbinXml.Net.Utils;
 
-namespace KbinXml.Net.HighPerformance.Readers;
+namespace KbinXml.Net.Internal.Readers;
 
-internal ref struct BigEndianReader : IKBinReader
+internal partial struct NodeReader
 {
-    private readonly ReadOnlySpan<byte> _span;
-
-    private int _position;
-
-    public BigEndianReader(ReadOnlySpan<byte> span)
-    {
-        _span = span;
-    }
-
     public SpanReadResult ReadBytes(int count)
     {
         var result = _span.Slice(_position, count);
