@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿extern alias old;
+
+using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using BenchmarkDotNet.Attributes;
@@ -46,6 +48,15 @@ public class MultiThreadComparisonBetweenLibsTask
         return MultiThreadUtils.DoMultiThreadWork(_ =>
         {
             return KbinConverter.ReadXmlLinq(_kbin);
+        }, 32, 5);
+    }
+
+    [Benchmark(Baseline = true)]
+    public object? ReadLinq_NKZsmos_old_32ThreadsX160()
+    {
+        return MultiThreadUtils.DoMultiThreadWork(_ =>
+        {
+            return old::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
         }, 32, 5);
     }
 

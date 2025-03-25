@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿extern alias old;
+
+using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -47,6 +49,15 @@ public class MultiThreadComparisonBetweenLibsTask
         return MultiThreadUtils.DoMultiThreadWork(_ =>
         {
             return KbinConverter.Write(_linq, KnownEncodings.UTF8);
+        }, 32, 5);
+    }
+
+    [Benchmark]
+    public object? WriteLinq_NKZsmos_old_32ThreadsX160()
+    {
+        return MultiThreadUtils.DoMultiThreadWork(_ =>
+        {
+            return old::KbinXml.Net.KbinConverter.Write(_linq, old::KbinXml.Net.KnownEncodings.UTF8);
         }, 32, 5);
     }
 

@@ -33,7 +33,7 @@ namespace GeneralUnitTests
                     """)]
         //[InlineData("""
         //            <root>
-        //                <rarity __type="u8">5</rarity>
+        //                <rarity __type="u8">5</rarity> 
         //                <generator_no __type="u16">1</generator_no>
         //                <distribution_date __type="u32">12356134</distribution_date>
         //                <is_default __type="u64">21512976124353</is_default>
