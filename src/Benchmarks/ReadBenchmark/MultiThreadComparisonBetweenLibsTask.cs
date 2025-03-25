@@ -51,7 +51,7 @@ public class MultiThreadComparisonBetweenLibsTask
         }, 32, 5);
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public object? ReadLinq_NKZsmos_v1_1_32ThreadsX160()
     {
         return MultiThreadUtils.DoMultiThreadWork(_ =>
