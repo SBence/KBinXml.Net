@@ -106,7 +106,7 @@ namespace GeneralUnitTests
             }
         }
 
-        [Fact(Skip = "NodeWriter不支持直接读取内部流")]
+        [Fact/*(Skip = "NodeWriter不支持直接读取内部流")*/]
         public void Debug_NodeWriter_WriteString()
         {
             // 由于NodeWriter是不可变的ref struct，不支持直接获取内部流
@@ -145,7 +145,7 @@ namespace GeneralUnitTests
             }
         }
 
-        [Fact(Skip = "DataReader不支持直接读取内部流")]
+        [Fact/*(Skip = "DataReader不支持直接读取内部流")*/]
         public void Debug_DataReadWrite()
         {
             // 由于DataReader是不可变的ref struct，不支持直接读取内部流

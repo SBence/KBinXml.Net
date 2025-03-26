@@ -268,5 +268,232 @@ namespace GeneralUnitTests
             // 验证页脚
             Assert.Equal("文档结束", result.Root.Element("footer").Element("note").Value);
         }
+
+        #region 属性和数组测试
+        
+        [Fact]
+        public void TestMultipleAttributes()
+        {
+            // 准备包含多个属性的XML
+            var xml = "<root id=\"1\" name=\"test\" value=\"123\"><node attr1=\"val1\" attr2=\"val2\" /></root>";
+            
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证属性保留
+            Assert.Equal("1", result.Root.Attribute("id").Value);
+            Assert.Equal("test", result.Root.Attribute("name").Value);
+            Assert.Equal("123", result.Root.Attribute("value").Value);
+            
+            var node = result.Root.Element("node");
+            Assert.NotNull(node);
+            Assert.Equal("val1", node.Attribute("attr1").Value);
+            Assert.Equal("val2", node.Attribute("attr2").Value);
+            
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestEmptyArray()
+        {
+            // 准备空数组XML
+            var xml = "<root><array __type=\"s32\" __count=\"0\"></array></root>";
+            
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证数组属性
+            var array = result.Root.Element("array");
+            Assert.NotNull(array);
+            Assert.Equal("s32", array.Attribute("__type").Value);
+            Assert.Equal("0", array.Attribute("__count").Value);
+            Assert.Equal("", array.Value);
+            
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestLargeArray()
+        {
+            // 生成大型数组数据
+            var values = string.Join(" ", Enumerable.Range(1, 1000));
+            var xml = $"<root><array __type=\"s32\" __count=\"1000\">{values}</array></root>";
+            
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证数组属性和内容
+            var array = result.Root.Element("array");
+            Assert.NotNull(array);
+            Assert.Equal("s32", array.Attribute("__type").Value);
+            Assert.Equal("1000", array.Attribute("__count").Value);
+            
+            // 验证数组元素
+            var resultValues = array.Value.Split(' ');
+            Assert.Equal(1000, resultValues.Length);
+            Assert.Equal("1", resultValues[0]);
+            Assert.Equal("1000", resultValues[999]);
+            
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestMixedArrayTypes()
+        {
+            // 准备不同类型的数组XML
+            var xml = "<root>" +
+                      "<array1 __type=\"s8\" __count=\"3\">1 2 3</array1>" +
+                      "<array2 __type=\"u16\" __count=\"3\">1000 2000 3000</array2>" +
+                      "<array3 __type=\"s32\" __count=\"3\">-1 -2 -3</array3>" +
+                      "</root>";
+            
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证不同类型数组
+            Assert.Equal("s8", result.Root.Element("array1").Attribute("__type").Value);
+            Assert.Equal("3", result.Root.Element("array1").Attribute("__count").Value);
+            Assert.Equal("1 2 3", result.Root.Element("array1").Value);
+            
+            Assert.Equal("u16", result.Root.Element("array2").Attribute("__type").Value);
+            Assert.Equal("3", result.Root.Element("array2").Attribute("__count").Value);
+            Assert.Equal("1000 2000 3000", result.Root.Element("array2").Value);
+            
+            Assert.Equal("s32", result.Root.Element("array3").Attribute("__type").Value);
+            Assert.Equal("3", result.Root.Element("array3").Attribute("__count").Value);
+            Assert.Equal("-1 -2 -3", result.Root.Element("array3").Value);
+            
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestInvalidArrayCount()
+        {
+            // 准备数组计数不匹配的XML
+            var xml = "<root><array __type=\"s32\" __count=\"3\">1 2</array></root>";
+            
+            // 设置严格模式选项
+            var writeOptions = new WriteOptions()
+            {
+                StrictMode = true
+            };
+            
+            // 验证抛出异常
+            Assert.Throws<KbinArrayCountMissMatchException>(() => 
+                KbinConverter.Write(xml, KnownEncodings.UTF8, writeOptions));
+        }
+
+        [Fact]
+        public void TestInvalidArrayType()
+        {
+            // 准备无效类型的数组XML
+            var xml = "<root><array __type=\"invalid\" __count=\"1\">1</array></root>";
+            
+            // 验证抛出异常
+            Assert.Throws<KbinTypeNotFoundException>(() => 
+                KbinConverter.Write(xml, KnownEncodings.UTF8));
+        }
+        
+        #endregion
+        
+        #region 特殊情况测试
+        
+        [Fact]
+        public void TestEmptyNode()
+        {
+            // 准备包含空节点的XML
+            var xml = "<root><empty></empty><self_closing /></root>";
+            
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证空节点正确转换
+            Assert.NotNull(result.Root.Element("empty"));
+            Assert.NotNull(result.Root.Element("self_closing"));
+            Assert.Equal(string.Empty, result.Root.Element("empty").Value);
+
+            var result2 = new StableKbin.XmlReader(kbin).ReadLinq();
+            Assert.Equal(result2.ToString(SaveOptions.DisableFormatting), result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Theory]
+        [InlineData("<root><node __type=\"str\">特殊文字：&amp;&lt;&gt;'\"</node></root>", KnownEncodings.UTF8)]
+        [InlineData("<root><node __type=\"str\">日本語テスト</node></root>", KnownEncodings.ShiftJIS)]
+        public void TestSpecialCharactersAndEncoding(string xml, KnownEncodings encoding)
+        {
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, encoding);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证特殊字符和编码正确处理
+            var xmlElement = XElement.Parse(xml);
+            Assert.Equal(xmlElement.Element("node").Value, result.Root.Element("node").Value);
+
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestDeepNestedNodes()
+        {
+            // 准备深度嵌套的XML
+            var xml = "<root><a><b><c><d><e __type=\"str\">深层嵌套测试</e></d></c></b></a></root>";
+            
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证深度嵌套结构保留
+            var eElement = result.Root.Element("a").Element("b").Element("c").Element("d").Element("e");
+            Assert.NotNull(eElement);
+            Assert.Equal("深层嵌套测试", eElement.Value);
+
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestLargeXml()
+        {
+            // 准备大型XML
+            var builder = new StringBuilder("<root>");
+            for (int i = 0; i < 100; i++)
+            {
+                builder.AppendFormat("<item __type=\"u32\" id=\"{0}\">{0}</item>", i);
+            }
+            builder.Append("</root>");
+            var xml = builder.ToString();
+
+            // 转换为Kbin并返回
+            var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
+            var result = KbinConverter.ReadXmlLinq(kbin);
+            
+            // 验证大型XML结构保留
+            var items = result.Root.Elements("item").ToList();
+            Assert.Equal(100, items.Count);
+            
+            // 验证某些特定元素
+            Assert.Equal("0", items[0].Value);
+            Assert.Equal("0", items[0].Attribute("id").Value);
+            Assert.Equal("99", items[99].Value);
+            Assert.Equal("99", items[99].Attribute("id").Value);
+
+            Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
+        }
+
+        [Fact]
+        public void TestInvalidXmlThrowsException()
+        {
+            // 准备无效XML
+            var invalidXml = "<root><unclosed>";
+            
+            // 验证抛出异常
+            Assert.Throws<XmlException>(() => KbinConverter.Write(invalidXml, KnownEncodings.UTF8));
+        }
+        
+        #endregion
     }
 } 
