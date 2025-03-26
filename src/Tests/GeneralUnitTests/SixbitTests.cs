@@ -5,7 +5,7 @@ using Xunit;
 
 namespace GeneralUnitTests
 {
-    public class SixbitTest
+    public class SixbitTests
     {
         [Fact]
         public void VerifyBitEquivalence()

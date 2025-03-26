@@ -29,6 +29,11 @@ public static partial class KbinConverter
     /// </remarks>
     public static byte[] Write(XmlDocument xml, KnownEncodings knownEncodings, WriteOptions? writeOptions = null)
     {
+        if (xml is null)
+        {
+            throw new ArgumentNullException(nameof(xml));
+        }
+
         var encoding = knownEncodings.ToEncoding();
         writeOptions ??= new WriteOptions();
         var context = new WriteContext(new NodeWriter(writeOptions.Compress, encoding), new DataWriter(encoding),
@@ -58,6 +63,11 @@ public static partial class KbinConverter
     /// <inheritdoc cref="Write(XmlDocument, KnownEncodings, WriteOptions?)"/>
     public static byte[] Write(XContainer xml, KnownEncodings knownEncodings, WriteOptions? writeOptions = null)
     {
+        if (xml is null)
+        {
+            throw new ArgumentNullException(nameof(xml));
+        }
+
         var encoding = knownEncodings.ToEncoding();
         writeOptions ??= new WriteOptions();
         var context = new WriteContext(new NodeWriter(writeOptions.Compress, encoding), new DataWriter(encoding),
@@ -87,6 +97,11 @@ public static partial class KbinConverter
     /// <inheritdoc cref="Write(XmlDocument, KnownEncodings, WriteOptions?)"/>
     public static byte[] Write(string xmlText, KnownEncodings knownEncodings, WriteOptions? writeOptions = null)
     {
+        if (string.IsNullOrEmpty(xmlText))
+        {
+            throw new ArgumentNullException(nameof(xmlText));
+        }
+
         var encoding = knownEncodings.ToEncoding();
         writeOptions ??= new WriteOptions();
         var context = new WriteContext(new NodeWriter(writeOptions.Compress, encoding), new DataWriter(encoding),
