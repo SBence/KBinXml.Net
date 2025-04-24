@@ -4,40 +4,69 @@ using System.Text;
 
 namespace KbinXml.Net.Internal.Readers;
 
-internal class NodeReader : BeBinaryReader
+internal ref partial struct NodeReader : IKBinReader
 {
-    private readonly bool _compressed;
+    private readonly ReadOnlySpan<byte> _span;
     private readonly Encoding _encoding;
+    private readonly bool _compressed;
 
-    public NodeReader(Memory<byte> buffer, int baseOffset, bool compressed, Encoding encoding)
-        : base(buffer, baseOffset)
+    private int _position;
+
+    public NodeReader(ReadOnlySpan<byte> span, Encoding encoding, bool compressed)
     {
+        _span = span;
         _compressed = compressed;
         _encoding = encoding;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public string ReadString(out int position)
+    public ValueReadResult<string> ReadString()
     {
-        int length = ReadU8(out position, out _);
+        var result = ReadU8();
+        var length = result.Value;
+        return _compressed
+            ? ReadCompressedString(length)
+            : ReadUncompressedString(length);
+    }
 
-        if (_compressed)
-        {
-            var memory = ReadBytes((int)Math.Ceiling(length * 6 / 8.0), out position, out _);
-            return SixbitHelper.Decode(memory.Span, length);
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ValueReadResult<string> ReadCompressedString(byte length)
+    {
+        var spanResult = ReadBytes((int)Math.Ceiling(length * 6 / 8.0));
+        var readString = SixbitHelper.Decode(spanResult.Span, length);
+        return new ValueReadResult<string>
+        (
+            readString
+#if USELOG
+            , spanResult.ReadStatus
+#endif
+        );
+    }
 
-        var mem = ReadBytes((length & 0xBF) + 1, out position, out _);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe ValueReadResult<string> ReadUncompressedString(byte length)
+    {
+        var readSpanResult = ReadBytes((length & 0xBF) + 1);
+
 #if NETSTANDARD2_1 || NETCOREAPP3_1_OR_GREATER
-        return _encoding.GetString(mem.Span);
-#elif NETSTANDARD2_0 || NET46_OR_GREATER
-        unsafe
-        {
-            fixed (byte* p = mem.Span)
-                return _encoding.GetString(p, mem.Length);
-        }
+        return new ValueReadResult<string>
+        (
+            _encoding.GetString(readSpanResult.Span)
+#if USELOG
+            , readSpanResult.ReadStatus
+#endif
+        );
 #else
-        return _encoding.GetString(mem.ToArray());
+        fixed (byte* p = readSpanResult.Span)
+        {
+            return new ValueReadResult<string>
+            (
+                _encoding.GetString(p, readSpanResult.Span.Length)
+#if USELOG
+                , readSpanResult.ReadStatus
+#endif
+            );
+        }
 #endif
     }
 }

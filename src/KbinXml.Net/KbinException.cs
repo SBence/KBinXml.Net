@@ -2,6 +2,23 @@
 
 namespace KbinXml.Net;
 
+public class KbinTypeNotFoundException : KbinException
+{
+    public KbinTypeNotFoundException(string type) : base($"The node type '{type}' was not found.")
+    {
+
+    }
+}
+
+public class KbinArrayCountMissMatchException : KbinException
+{
+    public KbinArrayCountMissMatchException(object? expectedValue, object actualValue) : base(
+        $"Array length does not match the '__count' attribute. Expected: {expectedValue}, Actual: {actualValue}.")
+    {
+
+    }
+}
+
 /// <summary>
 /// Represents errors that occur during KBin API operations.
 /// </summary>

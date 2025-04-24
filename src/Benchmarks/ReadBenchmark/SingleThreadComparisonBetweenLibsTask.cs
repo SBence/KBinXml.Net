@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿extern alias old;
+
+using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 using BenchmarkDotNet.Attributes;
@@ -44,6 +46,12 @@ public class SingleThreadComparisonBetweenLibsTask
     public object? ReadLinq_NKZsmos()
     {
         return KbinConverter.ReadXmlLinq(_kbin);
+    }
+
+    [Benchmark]
+    public object? ReadLinq_NKZsmos_v1_1()
+    {
+        return old::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
     }
 
     [Benchmark]

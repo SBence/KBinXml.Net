@@ -31,8 +31,14 @@ public class SingleThreadComparison1
         _xml = KbinConverter.ReadXml(_kbin);
         _xmlStr = _linq.ToString();
     }
-
+    
     [Benchmark(Baseline = true)]
+    public object? ReadRawStream()
+    {
+        return KbinConverter.GetXmlStream(_kbin);
+    }
+
+    [Benchmark]
     public object? ReadRaw()
     {
         return KbinConverter.ReadXmlBytes(_kbin);

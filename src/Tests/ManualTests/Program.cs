@@ -7,14 +7,39 @@ using System.Xml;
 using System.Xml.Linq;
 using KbinXml.Net;
 using kbinxmlcs;
+using Microsoft.IO;
 
 namespace ManualTests;
 
 public class Program
 {
+    internal static readonly RecyclableMemoryStreamManager RecyclableMemoryStreamManager = new();
+
     static void Main(string[] args)
     {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        //var stream = RecyclableMemoryStreamManager.GetStream(null, 204800);
+        //var init = stream.GetBuffer();
+        //init.AsSpan().Fill(0x80);
+        //var sb = stream.GetBuffer();
+        //stream.Position = 20;
+        //var ok = stream.GetSpan(20);
+        //for (int i = 0; i < 10; i++)
+        //{
+        //    ok[i] = (byte)(255 - i);
+        //}
+        //stream.Advance(10);
+        //var g = stream.ToArray();
+
+        //stream.Position = 10;
+        //ok = stream.GetSpan(10);
+        //for (int i = 0; i < 10; i++)
+        //{
+        //    ok[i] = (byte)(i + 1);
+        //}
+
+        //stream.Advance(10);
+        //g = stream.ToArray();
+        //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         SmallTest();
         InvalidTest();
 
@@ -63,20 +88,20 @@ public class Program
     {
         var smallText = File.ReadAllText("data/small.xml");
 
-        for (int i = 0; i < 500; i++)
+        for (int i = 0; i < 2000; i++)
         {
             if (i == 200)
             {
 
             }
-            var _kbin = KbinConverter.Write(File.ReadAllText(@"data/small.xml"), KnownEncodings.ShiftJIS);
-            var linq = KbinConverter.ReadXmlLinq(_kbin);
-            var _xmlStr = linq.ToString();
-            KbinConverter.Write(_xmlStr, KnownEncodings.ShiftJIS, new WriteOptions { RepairedPrefix = "PREFIX_" });
+            var _kbin = KbinConverter.Write(smallText, KnownEncodings.ShiftJIS);
+            //var linq = KbinConverter.ReadXmlLinq(_kbin);
+            //var _xmlStr = linq.ToString();
+            //KbinConverter.Write(_xmlStr, KnownEncodings.ShiftJIS, new WriteOptions { RepairedPrefix = "PREFIX_" });
 
 
-            byte[] smallKbin = KbinConverter.Write(smallText, KnownEncodings.ShiftJIS);
-            var smallXmlRead = KbinConverter.ReadXmlBytes(smallKbin);
+            //byte[] smallKbin = KbinConverter.Write(smallText, KnownEncodings.ShiftJIS);
+            //var smallXmlRead = KbinConverter.ReadXmlBytes(smallKbin);
         }
     }
 
