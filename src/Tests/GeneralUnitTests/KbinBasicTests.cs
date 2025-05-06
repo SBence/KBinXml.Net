@@ -23,13 +23,13 @@ namespace GeneralUnitTests
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        #region 基本读取功能测试
+        #region Basic Reading Tests
 
         [Fact]
         public void ReadXmlLinq_ValidKbin_ReturnsXDocument()
         {
             // Prepare valid XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -41,7 +41,7 @@ namespace GeneralUnitTests
             Assert.NotNull(result);
             Assert.NotNull(result.Root);
             Assert.Equal("root", result.Root.Name.ToString());
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
         }
@@ -50,7 +50,7 @@ namespace GeneralUnitTests
         public void ReadXmlLinq_WithEncodingOutput_ReturnsEncodingAndXDocument()
         {
             // Prepare valid XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -62,7 +62,7 @@ namespace GeneralUnitTests
             // Verify results
             Assert.NotNull(result);
             Assert.Equal(KnownEncodings.UTF8, encoding);
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
         }
@@ -71,7 +71,7 @@ namespace GeneralUnitTests
         public void ReadXmlBytes_ValidKbin_ReturnsXmlBytes()
         {
             // Prepare valid XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -87,7 +87,7 @@ namespace GeneralUnitTests
             var resultStr = Encoding.UTF8.GetString(xmlBytes);
             Assert.Contains("<root>", resultStr);
             Assert.Contains("<value", resultStr);
-            Assert.Contains("测试", resultStr);
+            Assert.Contains("テスト", resultStr);
             Assert.Contains("</root>", resultStr);
 
             var formatXml = XDocument.Parse(xml).ToString(SaveOptions.DisableFormatting);
@@ -98,7 +98,7 @@ namespace GeneralUnitTests
         public void GetXmlStream_ValidKbin_ReturnsMemoryStream()
         {
             // Prepare valid XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -116,7 +116,7 @@ namespace GeneralUnitTests
             var resultStr = reader.ReadToEnd();
             Assert.Contains("<root>", resultStr);
             Assert.Contains("<value", resultStr);
-            Assert.Contains("测试", resultStr);
+            Assert.Contains("テスト", resultStr);
             Assert.Contains("</root>", resultStr);
         }
 
@@ -124,7 +124,7 @@ namespace GeneralUnitTests
         public void ReadXml_ValidKbin_ReturnsXmlDocument()
         {
             // Prepare valid XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -136,7 +136,7 @@ namespace GeneralUnitTests
             Assert.NotNull(result);
             Assert.NotNull(result.DocumentElement);
             Assert.Equal("root", result.DocumentElement.Name);
-            Assert.Equal("测试", result.DocumentElement.SelectSingleNode("value").InnerText);
+            Assert.Equal("テスト", result.DocumentElement.SelectSingleNode("value").InnerText);
 
             var formatXml = XDocument.Parse(xml).ToString(SaveOptions.DisableFormatting);
             Assert.Equal(xml, formatXml);
@@ -144,14 +144,14 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 基本写入功能测试
+        #region Basic Writing Tests
 
         [Fact]
         public void Write_XmlDocument_ReturnsKbinBytes()
         {
             // Prepare XmlDocument
             var doc = new XmlDocument();
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
             doc.LoadXml(xml);
 
             // Convert to Kbin
@@ -163,7 +163,7 @@ namespace GeneralUnitTests
 
             // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
         }
@@ -174,7 +174,7 @@ namespace GeneralUnitTests
             // Prepare XDocument
             var doc = new XDocument(
                 new XElement("root",
-                    new XElement("value", new XAttribute("__type", "str"), "测试")
+                    new XElement("value", new XAttribute("__type", "str"), "テスト")
                 )
             );
 
@@ -187,14 +187,14 @@ namespace GeneralUnitTests
 
             // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
         }
 
         [Fact]
         public void Write_XmlString_ReturnsKbinBytes()
         {
             // Prepare XML string
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -205,7 +205,7 @@ namespace GeneralUnitTests
 
             // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
         }
@@ -214,7 +214,7 @@ namespace GeneralUnitTests
         public void Write_XmlBytes_ReturnsKbinBytes()
         {
             // Prepare XML bytes
-            var xmlStr = "<root><value __type=\"str\">测试</value></root>";
+            var xmlStr = "<root><value __type=\"str\">テスト</value></root>";
             var xmlBytes = Encoding.UTF8.GetBytes(xmlStr);
 
             // Convert to Kbin
@@ -226,14 +226,14 @@ namespace GeneralUnitTests
 
             // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
 
             Assert.Equal(xmlStr, result.ToString(SaveOptions.DisableFormatting));
         }
 
         #endregion
 
-        #region 读写结合测试
+        #region Read-Write Combined Tests
 
         [Fact]
         public void ReadWriteSimple_PreservesContent()
@@ -256,7 +256,7 @@ namespace GeneralUnitTests
         public void ReadWriteWithAttributes_PreservesAttributes()
         {
             // Prepare XML with attributes
-            var xml = "<root><item __type=\"str\" enabled=\"true\" id=\"1\" name=\"测试项\">带属性的项目</item></root>";
+            var xml = "<root><item __type=\"str\" enabled=\"true\" id=\"1\" name=\"テスト項目\">属性付きアイテム</item></root>";
 
             // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -265,9 +265,9 @@ namespace GeneralUnitTests
             // Verify attribute consistency
             var itemElement = result.Root.Element("item");
             Assert.Equal("1", itemElement.Attribute("id").Value);
-            Assert.Equal("测试项", itemElement.Attribute("name").Value);
+            Assert.Equal("テスト項目", itemElement.Attribute("name").Value);
             Assert.Equal("true", itemElement.Attribute("enabled").Value);
-            Assert.Equal("带属性的项目", itemElement.Value);
+            Assert.Equal("属性付きアイテム", itemElement.Value);
 
             var formatXml = XDocument.Parse(xml).ToString(SaveOptions.DisableFormatting);
             Assert.Equal(formatXml, result.ToString(SaveOptions.DisableFormatting));
@@ -280,10 +280,10 @@ namespace GeneralUnitTests
             var xml = @"
             <root>
                 <parent>
-                    <child1 __type=""str"">值1</child1>
-                    <child2 __type=""str"">值2</child2>
+                    <child1 __type=""str"">値1</child1>
+                    <child2 __type=""str"">値2</child2>
                     <subParent>
-                        <subChild __type=""str"">嵌套值</subChild>
+                        <subChild __type=""str"">ネスト値</subChild>
                     </subParent>
                 </parent>
             </root>";
@@ -294,9 +294,9 @@ namespace GeneralUnitTests
 
             // Verify nested structure consistency
             var parentElement = result.Root.Element("parent");
-            Assert.Equal("值1", parentElement.Element("child1").Value);
-            Assert.Equal("值2", parentElement.Element("child2").Value);
-            Assert.Equal("嵌套值", parentElement.Element("subParent").Element("subChild").Value);
+            Assert.Equal("値1", parentElement.Element("child1").Value);
+            Assert.Equal("値2", parentElement.Element("child2").Value);
+            Assert.Equal("ネスト値", parentElement.Element("subParent").Element("subChild").Value);
 
             var formatXml = XDocument.Parse(xml).ToString(SaveOptions.DisableFormatting);
             Assert.Equal(formatXml, result.ToString(SaveOptions.DisableFormatting));
@@ -309,9 +309,9 @@ namespace GeneralUnitTests
             var xml = @"
             <root>
                 <items>
-                    <item __type=""str"">第一项</item>
-                    <item __type=""str"">第二项</item>
-                    <item __type=""str"">第三项</item>
+                    <item __type=""str"">最初の項目</item>
+                    <item __type=""str"">2番目の項目</item>
+                    <item __type=""str"">3番目の項目</item>
                 </items>
             </root>";
 
@@ -322,9 +322,9 @@ namespace GeneralUnitTests
             // Verify array consistency
             var itemElements = result.Root.Element("items").Elements("item").ToList();
             Assert.Equal(3, itemElements.Count);
-            Assert.Equal("第一项", itemElements[0].Value);
-            Assert.Equal("第二项", itemElements[1].Value);
-            Assert.Equal("第三项", itemElements[2].Value);
+            Assert.Equal("最初の項目", itemElements[0].Value);
+            Assert.Equal("2番目の項目", itemElements[1].Value);
+            Assert.Equal("3番目の項目", itemElements[2].Value);
 
             var formatXml = XDocument.Parse(xml).ToString(SaveOptions.DisableFormatting);
             Assert.Equal(formatXml, result.ToString(SaveOptions.DisableFormatting));
@@ -337,10 +337,10 @@ namespace GeneralUnitTests
             var xml = @"
             <config version=""1.0"">
                 <server id=""main"" port=""8080"">
-                    <name __type=""str"">主服务器</name>
+                    <name __type=""str"">メインサーバー</name>
                     <services>
-                        <service __type=""str"" type=""http"">Web服务</service>
-                        <service __type=""str"" type=""ftp"">文件服务</service>
+                        <service __type=""str"" type=""http"">Webサービス</service>
+                        <service __type=""str"" type=""ftp"">ファイルサービス</service>
                     </services>
                 </server>
             </config>";
@@ -355,14 +355,14 @@ namespace GeneralUnitTests
             var serverElement = result.Root.Element("server");
             Assert.Equal("main", serverElement.Attribute("id").Value);
             Assert.Equal("8080", serverElement.Attribute("port").Value);
-            Assert.Equal("主服务器", serverElement.Element("name").Value);
+            Assert.Equal("メインサーバー", serverElement.Element("name").Value);
 
             var serviceElements = serverElement.Element("services").Elements("service").ToList();
             Assert.Equal(2, serviceElements.Count);
             Assert.Equal("http", serviceElements[0].Attribute("type").Value);
-            Assert.Equal("Web服务", serviceElements[0].Value);
+            Assert.Equal("Webサービス", serviceElements[0].Value);
             Assert.Equal("ftp", serviceElements[1].Attribute("type").Value);
-            Assert.Equal("文件服务", serviceElements[1].Value);
+            Assert.Equal("ファイルサービス", serviceElements[1].Value);
 
             var formatXml = XDocument.Parse(xml).ToString(SaveOptions.DisableFormatting);
             Assert.Equal(formatXml, result.ToString(SaveOptions.DisableFormatting));
@@ -370,13 +370,13 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 选项测试
+        #region Options Tests
 
         [Fact]
         public void WriteOptions_CustomPrefix_HandlesCorrectly()
         {
             // Prepare XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
 
             // Prepare custom prefix WriteOptions
             var options = new WriteOptions
@@ -390,7 +390,7 @@ namespace GeneralUnitTests
             var result = KbinConverter.ReadXmlLinq(kbin);
 
             // Verify value correctness
-            Assert.Equal("测试", result.Root.Element("value").Value);
+            Assert.Equal("テスト", result.Root.Element("value").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
         }
@@ -407,7 +407,7 @@ namespace GeneralUnitTests
             switch (encoding)
             {
                 case KnownEncodings.UTF8:
-                    testText = "UTF-8测试";
+                    testText = "UTF-8テスト";
                     break;
                 case KnownEncodings.ASCII:
                     testText = "ASCII test";
@@ -438,7 +438,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 特殊测试案例
+        #region Special Test Cases
 
         [Fact]
         public void TestSpecialXml_NestedElements()

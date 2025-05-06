@@ -32,7 +32,7 @@ namespace GeneralUnitTests
             <root>
                 <level1>
                     <level2>
-                        <level3 __type=""str"">深度嵌套测试</level3>
+                        <level3 __type=""str"">深層ネストテスト</level3>
                     </level2>
                 </level1>
             </root>";
@@ -45,7 +45,7 @@ namespace GeneralUnitTests
             Assert.NotNull(result.Root.Element("level1"));
             Assert.NotNull(result.Root.Element("level1").Element("level2"));
             Assert.NotNull(result.Root.Element("level1").Element("level2").Element("level3"));
-            Assert.Equal("深度嵌套测试", result.Root.Element("level1").Element("level2").Element("level3").Value);
+            Assert.Equal("深層ネストテスト", result.Root.Element("level1").Element("level2").Element("level3").Value);
         }
         
         [Fact]
@@ -54,8 +54,8 @@ namespace GeneralUnitTests
             // Prepare XML with attributes
             var xml = @"
             <root version=""1.0"">
-                <node id=""1"" name=""节点1"" __type=""str"">值1</node>
-                <node id=""2"" name=""节点2"" __type=""str"">值2</node>
+                <node id=""1"" name=""ノード1"" __type=""str"">値1</node>
+                <node id=""2"" name=""ノード2"" __type=""str"">値2</node>
             </root>";
             
             // Convert to Kbin and return
@@ -74,13 +74,13 @@ namespace GeneralUnitTests
                 nodeCount++;
                 if (node.Attribute("id").Value == "1")
                 {
-                    Assert.Equal("节点1", node.Attribute("name").Value);
-                    Assert.Equal("值1", node.Value);
+                    Assert.Equal("ノード1", node.Attribute("name").Value);
+                    Assert.Equal("値1", node.Value);
                 }
                 else if (node.Attribute("id").Value == "2")
                 {
-                    Assert.Equal("节点2", node.Attribute("name").Value);
-                    Assert.Equal("值2", node.Value);
+                    Assert.Equal("ノード2", node.Attribute("name").Value);
+                    Assert.Equal("値2", node.Value);
                 }
             }
             
@@ -95,7 +95,7 @@ namespace GeneralUnitTests
             <root>
                 <empty1 />
                 <empty2></empty2>
-                <notEmpty __type=""str"">有内容</notEmpty>
+                <notEmpty __type=""str"">コンテンツあり</notEmpty>
             </root>";
             
             // Convert to Kbin and return
@@ -109,7 +109,7 @@ namespace GeneralUnitTests
             Assert.Equal(string.Empty, result.Root.Element("empty2").Value);
             
             // Verify non-empty elements are correct
-            Assert.Equal("有内容", result.Root.Element("notEmpty").Value);
+            Assert.Equal("コンテンツあり", result.Root.Element("notEmpty").Value);
         }
         
         [Fact]
@@ -118,7 +118,7 @@ namespace GeneralUnitTests
             // Prepare XML with mixed content
             var xml = @"
             <root>
-                <mixed __type=""str"">文本1<inner __type=""str"">内部元素</inner>文本2</mixed>
+                <mixed __type=""str"">テキスト1<inner __type=""str"">内部要素</inner>テキスト2</mixed>
             </root>";
             
             // Convert to Kbin and return
@@ -131,7 +131,7 @@ namespace GeneralUnitTests
             
             // Note: Kbin XML conversion may not support preserving mixed content, but should ensure internal elements are normal
             Assert.NotNull(mixedElement.Element("inner"));
-            Assert.Equal("内部元素", mixedElement.Element("inner").Value);
+            Assert.Equal("内部要素", mixedElement.Element("inner").Value);
         }
         
         [Fact]
@@ -178,9 +178,9 @@ namespace GeneralUnitTests
             // Prepare XML with same name nodes
             var xml = @"
             <root>
-                <item __type=""str"">第一项</item>
-                <item __type=""str"">第二项</item>
-                <item __type=""str"">第三项</item>
+                <item __type=""str"">最初の項目</item>
+                <item __type=""str"">2番目の項目</item>
+                <item __type=""str"">3番目の項目</item>
             </root>";
             
             // Convert to Kbin and return
@@ -189,7 +189,7 @@ namespace GeneralUnitTests
             
             // Verify same name nodes are preserved
             var items = result.Root.Elements("item");
-            var values = new[] { "第一项", "第二项", "第三项" };
+            var values = new[] { "最初の項目", "2番目の項目", "3番目の項目" };
             int i = 0;
             
             foreach (var item in items)
@@ -208,14 +208,14 @@ namespace GeneralUnitTests
             var xml = @"
             <root version=""2.0"">
                 <header>
-                    <title __type=""str"">测试文档</title>
-                    <author __type=""str"">测试用户</author>
+                    <title __type=""str"">テスト文書</title>
+                    <author __type=""str"">テストユーザー</author>
                     <date __type=""str"">2023-10-15</date>
                 </header>
                 <body>
                     <section id=""1"">
-                        <title __type=""str"">第一节</title>
-                        <paragraph __type=""str"">这是第一段落，包含<emphasis __type=""str"">强调文本</emphasis>。</paragraph>
+                        <title __type=""str"">セクション1</title>
+                        <paragraph __type=""str"">これは最初の段落で、<emphasis __type=""str"">強調テキスト</emphasis>が含まれています。</paragraph>
                         <stats>
                             <value __type=""s32"">42</value>
                             <value __type=""s32"">-10</value>
@@ -223,13 +223,13 @@ namespace GeneralUnitTests
                         </stats>
                     </section>
                     <section id=""2"">
-                        <title __type=""str"">第二节</title>
-                        <paragraph __type=""str"">这是第二段落。</paragraph>
+                        <title __type=""str"">セクション2</title>
+                        <paragraph __type=""str"">これは2番目の段落です。</paragraph>
                         <list __type=""u8"" __count=""3"">1 2 3</list>
                     </section>
                 </body>
                 <footer>
-                    <note __type=""str"">文档结束</note>
+                    <note __type=""str"">文書の終わり</note>
                 </footer>
             </root>";
             
@@ -241,24 +241,24 @@ namespace GeneralUnitTests
             Assert.Equal("2.0", result.Root.Attribute("version").Value);
             
             // Verify title
-            Assert.Equal("测试文档", result.Root.Element("header").Element("title").Value);
-            Assert.Equal("测试用户", result.Root.Element("header").Element("author").Value);
+            Assert.Equal("テスト文書", result.Root.Element("header").Element("title").Value);
+            Assert.Equal("テストユーザー", result.Root.Element("header").Element("author").Value);
             Assert.Equal("2023-10-15", result.Root.Element("header").Element("date").Value);
             Assert.Equal("str", result.Root.Element("header").Element("date").Attribute("__type").Value);
             
             // Verify first section
             var section1 = result.Root.Element("body").Elements("section").First(s => s.Attribute("id").Value == "1");
-            Assert.Equal("第一节", section1.Element("title").Value);
+            Assert.Equal("セクション1", section1.Element("title").Value);
             Assert.NotNull(section1.Element("paragraph").Element("emphasis"));
-            Assert.Equal("强调文本", section1.Element("paragraph").Element("emphasis").Value);
+            Assert.Equal("強調テキスト", section1.Element("paragraph").Element("emphasis").Value);
             
             var stats = section1.Element("stats").Elements("value");
             Assert.Equal(3, stats.Count());
             
             // Verify second section
             var section2 = result.Root.Element("body").Elements("section").First(s => s.Attribute("id").Value == "2");
-            Assert.Equal("第二节", section2.Element("title").Value);
-            Assert.Equal("这是第二段落。", section2.Element("paragraph").Value);
+            Assert.Equal("セクション2", section2.Element("title").Value);
+            Assert.Equal("これは2番目の段落です。", section2.Element("paragraph").Value);
             
             var list = section2.Element("list");
             Assert.Equal("u8", list.Attribute("__type").Value);
@@ -266,10 +266,10 @@ namespace GeneralUnitTests
             Assert.Equal("1 2 3", list.Value);
             
             // Verify footer
-            Assert.Equal("文档结束", result.Root.Element("footer").Element("note").Value);
+            Assert.Equal("文書の終わり", result.Root.Element("footer").Element("note").Value);
         }
 
-        #region 属性和数组测试
+        #region Attributes and Arrays Tests
         
         [Fact]
         public void TestMultipleAttributes()
@@ -400,7 +400,7 @@ namespace GeneralUnitTests
         
         #endregion
         
-        #region 特殊情况测试
+        #region Special Cases Tests
         
         [Fact]
         public void TestEmptyNode()
@@ -441,7 +441,7 @@ namespace GeneralUnitTests
         public void TestDeepNestedNodes()
         {
             // Prepare deep nested XML
-            var xml = "<root><a><b><c><d><e __type=\"str\">深层嵌套测试</e></d></c></b></a></root>";
+            var xml = "<root><a><b><c><d><e __type=\"str\">深層ネストテスト</e></d></c></b></a></root>";
             
             // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
@@ -450,7 +450,7 @@ namespace GeneralUnitTests
             // Verify deep nested structure is preserved
             var eElement = result.Root.Element("a").Element("b").Element("c").Element("d").Element("e");
             Assert.NotNull(eElement);
-            Assert.Equal("深层嵌套测试", eElement.Value);
+            Assert.Equal("深層ネストテスト", eElement.Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
         }

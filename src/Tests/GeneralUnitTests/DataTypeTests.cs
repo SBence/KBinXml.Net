@@ -22,7 +22,7 @@ namespace GeneralUnitTests
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
-        #region 数值类型测试
+        #region Numeric Type Tests
 
         [Theory]
         [InlineData("u8", "0", 0)]
@@ -116,11 +116,11 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 字符串类型测试
+        #region String Type Tests
 
         [Theory]
         [InlineData("Hello World")]
-        [InlineData("测试字符串")]
+        [InlineData("テスト文字列")]
         [InlineData("Special chars")]
         [InlineData("")]
         public void StringType_ConversionIsCorrect(string value)
@@ -143,7 +143,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 二进制类型测试
+        #region Binary Type Tests
 
         [Theory]
         [InlineData("deadbeef", 4)]
@@ -170,7 +170,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 数组类型测试
+        #region Array Type Tests
 
         [Theory]
         [InlineData("s8", "0 1 -1 127 -128", 5)]
@@ -197,7 +197,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region IP4类型测试
+        #region IP4 Type Tests
 
         [Fact]
         public void Ip4Type_ConversionIsCorrect()
@@ -220,7 +220,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 类型转换器基本测试
+        #region Type Converter Basic Tests
 
         [Fact]
         public void ByteConverterTest()
@@ -280,7 +280,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 异常测试
+        #region Exception Tests
 
         [Fact]
         public void InvalidValue_ThrowsException()
@@ -304,7 +304,7 @@ namespace GeneralUnitTests
 
         #endregion
 
-        #region 原始类型转换测试
+        #region Primitive Type Conversion Tests
         
         [Theory]
         [ClassData(typeof(ByteTestData))]

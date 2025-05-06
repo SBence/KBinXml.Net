@@ -24,7 +24,7 @@ namespace GeneralUnitTests
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
         
-        #region 异常测试
+        #region Exception Tests
         
         [Fact]
         public void ReadXmlLinq_InvalidKbin_ThrowsKbinException()
@@ -40,7 +40,7 @@ namespace GeneralUnitTests
         public void Write_InvalidEncoding_ThrowsArgumentOutOfRangeException()
         {
             // Prepare valid XML
-            var xml = "<root><value __type=\"str\">测试</value></root>";
+            var xml = "<root><value __type=\"str\">テスト</value></root>";
             
             // Convert XML string to XmlDocument
             var xmlDoc = new XmlDocument();
@@ -76,7 +76,7 @@ namespace GeneralUnitTests
         public void Write_InvalidXmlString_ThrowsXmlException()
         {
             // Prepare invalid XML string (missing closing tag)
-            var invalidXml = "<root><value __type=\"str\">测试</value>";
+            var invalidXml = "<root><value __type=\"str\">テスト</value>";
             
             // Verify exception is thrown
             Assert.Throws<XmlException>(() => KbinConverter.Write(invalidXml, KnownEncodings.UTF8));
@@ -114,7 +114,7 @@ namespace GeneralUnitTests
         
         #endregion
         
-        #region 边界条件测试
+        #region Boundary Condition Tests
         
         [Fact]
         public void EmptyXml_CanConvert()
@@ -188,7 +188,7 @@ namespace GeneralUnitTests
             
             // Add __type attribute to innermost level
             deepXmlBuilder.Append("<level20 __type=\"str\">");
-            deepXmlBuilder.Append("最深处");
+            deepXmlBuilder.Append("最深部");
             deepXmlBuilder.Append("</level20>");
             
             // Close all tags
@@ -217,21 +217,21 @@ namespace GeneralUnitTests
                 Assert.NotNull(element);
             }
             
-            Assert.Equal("最深处", element.Value);
+            Assert.Equal("最深部", element.Value);
         }
         
         [Fact]
         public void XmlWithSpecialChars_CanConvert()
         {
             // Prepare XML with special characters
-            var xml = "<root><value __type=\"str\">特殊字符: &lt;&gt;&amp;&quot;&apos;</value></root>";
+            var xml = "<root><value __type=\"str\">特殊文字: &lt;&gt;&amp;&quot;&apos;</value></root>";
             
             // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
             // Verify XML with special characters correctly converted
-            Assert.Equal("特殊字符: <>&\"'", result.Root.Element("value").Value);
+            Assert.Equal("特殊文字: <>&\"'", result.Root.Element("value").Value);
         }
         
         [Fact]
@@ -286,7 +286,7 @@ namespace GeneralUnitTests
         
         #endregion
         
-        #region 异常类测试
+        #region Exception Class Tests
         
         [Fact]
         public void KbinException_DefaultConstructor_CreatesInstance()
@@ -303,7 +303,7 @@ namespace GeneralUnitTests
         public void KbinException_MessageConstructor_SetsMessage()
         {
             // Expected error message
-            const string expectedMessage = "测试错误消息";
+            const string expectedMessage = "テストエラーメッセージ";
             
             // Use message constructor to create exception
             var exception = new KbinException(expectedMessage);
@@ -316,8 +316,8 @@ namespace GeneralUnitTests
         public void KbinException_InnerExceptionConstructor_SetsMessageAndInnerException()
         {
             // Prepare inner exception and message
-            const string expectedMessage = "外部异常消息";
-            var innerException = new InvalidOperationException("内部异常消息");
+            const string expectedMessage = "外部例外メッセージ";
+            var innerException = new InvalidOperationException("内部例外メッセージ");
             
             // Use message and inner exception constructor to create exception
             var exception = new KbinException(expectedMessage, innerException);

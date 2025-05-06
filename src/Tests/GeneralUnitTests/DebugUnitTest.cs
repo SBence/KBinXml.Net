@@ -29,7 +29,7 @@ namespace GeneralUnitTests
         public void Debug_EncodingProcess()
         {
             // Prepare a simple XML, add __type attribute
-            var testXml = "<root><value __type=\"str\">测试</value></root>";
+            var testXml = "<root><value __type=\"str\">テスト</value></root>";
             _outputHelper.WriteLine($"Original XML: {testXml}");
             
             // Generate Kbin binary data
@@ -74,7 +74,7 @@ namespace GeneralUnitTests
         public void Debug_EncodingBuffers()
         {
             // Test different string encoding results
-            var testString = "测试";
+            var testString = "テスト";
             _outputHelper.WriteLine($"Test string: '{testString}'");
             
             foreach (KnownEncodings encoding in Enum.GetValues(typeof(KnownEncodings)))
@@ -111,7 +111,7 @@ namespace GeneralUnitTests
         {
             // Since NodeWriter is an immutable ref struct, it doesn't support direct internal stream access
             // So we only test the overall XML conversion instead of testing NodeWriter separately
-            var testString = "测试";
+            var testString = "テスト";
             _outputHelper.WriteLine($"Test string: '{testString}'");
             
             foreach (KnownEncodings knownEncoding in Enum.GetValues(typeof(KnownEncodings)))
@@ -150,7 +150,7 @@ namespace GeneralUnitTests
         {
             // Since DataReader is an immutable ref struct, it doesn't support direct internal stream access
             // So we only test the overall XML conversion instead of testing DataReader/DataWriter separately
-            var testString = "测试";
+            var testString = "テスト";
             _outputHelper.WriteLine($"Test string: '{testString}'");
             
             foreach (KnownEncodings knownEncoding in Enum.GetValues(typeof(KnownEncodings)))
@@ -187,9 +187,9 @@ namespace GeneralUnitTests
         [Fact]
         public void Debug_EncodingDetailTest()
         {
-            var chineseStrings = new[] { "测试", "主服务器", "第一项", "有内容" };
+            var japaneseStrings = new[] { "テスト", "メインサーバー", "最初の項目", "コンテンツあり" };
             
-            foreach (var testString in chineseStrings)
+            foreach (var testString in japaneseStrings)
             {
                 _outputHelper.WriteLine($"\n==== Test string: '{testString}' ====");
                 
@@ -248,7 +248,7 @@ namespace GeneralUnitTests
             var xml = @"
             <root>
                 <!-- String types -->
-                <strValue __type=""str"">测试字符串</strValue>
+                <strValue __type=""str"">テスト文字列</strValue>
                 
                 <!-- Numerical types -->
                 <intValue __type=""s32"">42</intValue>
@@ -263,15 +263,15 @@ namespace GeneralUnitTests
                 <!-- Array types -->
                 <intArray __type=""s32"" __count=""3"">10 20 30</intArray>
                 <strArray>
-                    <item __type=""str"">第一项</item>
-                    <item __type=""str"">第二项</item>
-                    <item __type=""str"">第三项</item>
+                    <item __type=""str"">最初の項目</item>
+                    <item __type=""str"">2番目の項目</item>
+                    <item __type=""str"">3番目の項目</item>
                 </strArray>
                 
                 <!-- Complex structure -->
                 <section id=""1"">
-                    <title __type=""str"">测试节</title>
-                    <content __type=""str"">有内容</content>
+                    <title __type=""str"">テストセクション</title>
+                    <content __type=""str"">コンテンツあり</content>
                 </section>
             </root>";
 
@@ -346,7 +346,7 @@ namespace GeneralUnitTests
                 <u64Value __type=""u64"">18446744073709551615</u64Value>
                 
                 <!-- String and binary -->
-                <strValue __type=""str"">测试字符串</strValue>
+                <strValue __type=""str"">テスト文字列</strValue>
                 <binValue __type=""bin"" __size=""4"">DEADBEEF</binValue>
                 
                 <!-- Special types -->
