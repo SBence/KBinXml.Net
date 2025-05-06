@@ -25,7 +25,7 @@ namespace StableKbin
                 : new byte[count];
             Stream.Read(span);
             return span.ToArray();
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             var buffer = new byte[count];
             Stream.Read(buffer, 0, count);
             return buffer;
@@ -36,13 +36,13 @@ namespace StableKbin
         {
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
             Stream.Write(buffer);
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             Stream.Write(buffer.ToArray(), 0, buffer.Length);
 #endif
         }
 
         public virtual void WriteS8(sbyte value) => WriteBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new[] { (byte)value }
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc[] { (byte)value }
@@ -50,7 +50,7 @@ namespace StableKbin
         );
 
         public virtual void WriteS16(short value) => WriteBytes(BitConverterHelper.GetBigEndianBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new byte[sizeof(short)]
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc byte[sizeof(short)]
@@ -58,7 +58,7 @@ namespace StableKbin
             , value));
 
         public virtual void WriteS32(int value) => WriteBytes(BitConverterHelper.GetBigEndianBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new byte[sizeof(int)]
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc byte[sizeof(int)]
@@ -66,7 +66,7 @@ namespace StableKbin
             , value));
 
         public virtual void WriteS64(long value) => WriteBytes(BitConverterHelper.GetBigEndianBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new byte[sizeof(long)]
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc byte[sizeof(long)]
@@ -74,7 +74,7 @@ namespace StableKbin
             , value));
 
         public virtual void WriteU8(byte value) => WriteBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new[] { value }
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc[] { value }
@@ -82,7 +82,7 @@ namespace StableKbin
         );
 
         public virtual void WriteU16(ushort value) => WriteBytes(BitConverterHelper.GetBigEndianBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new byte[sizeof(ushort)]
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc byte[sizeof(ushort)]
@@ -90,7 +90,7 @@ namespace StableKbin
             , value));
 
         public virtual void WriteU32(uint value) => WriteBytes(BitConverterHelper.GetBigEndianBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new byte[sizeof(uint)]
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc byte[sizeof(uint)]
@@ -98,7 +98,7 @@ namespace StableKbin
             , value));
 
         public virtual void WriteU64(ulong value) => WriteBytes(BitConverterHelper.GetBigEndianBytes(
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
             new byte[sizeof(ulong)]
 #elif NETSTANDARD2_1 || NET5_0_OR_GREATER
             stackalloc byte[sizeof(ulong)]

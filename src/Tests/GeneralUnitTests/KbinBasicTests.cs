@@ -20,7 +20,9 @@ namespace GeneralUnitTests
         public KbinBasicTests(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
+#if NETCOREAPP3_1_OR_GREATER
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
         }
 
         #region Basic Reading Tests
@@ -112,7 +114,7 @@ namespace GeneralUnitTests
 
             // Read stream and verify content
             stream.Position = 0;
-            using var reader = new StreamReader(stream, Encoding.UTF8, true, -1, true);
+            using var reader = new StreamReader(stream, Encoding.UTF8, true);
             var resultStr = reader.ReadToEnd();
             Assert.Contains("<root>", resultStr);
             Assert.Contains("<value", resultStr);

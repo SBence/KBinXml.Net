@@ -39,7 +39,7 @@ namespace StableKbin
                     : new byte[count];
                 Stream.Read(span);
                 return span.ToArray();
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
                 var span = new byte[count];
                 Stream.Read(span, 0, count);
                 return span;
@@ -55,7 +55,7 @@ namespace StableKbin
                     ? stackalloc byte[count]
                     : new byte[count];
                 Stream.Read(span);
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
                 var span = new byte[count];
                 Stream.Read(span, 0, count);
 #endif
@@ -63,7 +63,7 @@ namespace StableKbin
 
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
                 return span.ToArray();
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
                 return span;
 #endif
             }
@@ -193,7 +193,7 @@ namespace StableKbin
         {
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
             return _encoding.GetString(Read32BitAligned(count)).TrimEnd('\0');
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             return _encoding.GetString(Read32BitAligned(count).ToArray()).TrimEnd('\0');
 #endif
         }

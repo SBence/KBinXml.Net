@@ -28,9 +28,9 @@ namespace GeneralUnitTests
             SixbitHelperSuperOptimized.Encode(testData, outputSuperOptimized);
             SixbitHelperCoreClrOptimized.Encode(testData, outputCoreClrOptimized);
             
-            Assert.Equal(outputOriginal, outputOptimized);
-            Assert.Equal(outputOriginal, outputSuperOptimized);
-            Assert.Equal(outputOriginal, outputCoreClrOptimized);
+            Assert.Equal(outputOriginal.ToArray(), outputOptimized.ToArray());
+            Assert.Equal(outputOriginal.ToArray(), outputSuperOptimized.ToArray());
+            Assert.Equal(outputOriginal.ToArray(), outputCoreClrOptimized.ToArray());
         }
 
         [Fact]
@@ -58,9 +58,9 @@ namespace GeneralUnitTests
             SixbitHelperSuperOptimized.Decode(output, inputSuperOptimized);
             SixbitHelperCoreClrOptimized.Decode(output, inputCoreClrOptimized);
             
-            Assert.Equal(inputOriginal, inputOptimized);
-            Assert.Equal(inputOriginal, inputSuperOptimized);
-            Assert.Equal(inputSuperOptimized, inputCoreClrOptimized);
+            Assert.Equal(inputOriginal.ToArray(), inputOptimized.ToArray());
+            Assert.Equal(inputOriginal.ToArray(), inputSuperOptimized.ToArray());
+            Assert.Equal(inputSuperOptimized.ToArray(), inputCoreClrOptimized.ToArray());
         }
     }
 }

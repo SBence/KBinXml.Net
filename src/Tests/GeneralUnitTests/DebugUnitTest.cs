@@ -22,7 +22,9 @@ namespace GeneralUnitTests
         public DebugUnitTest(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
+#if NETCOREAPP3_1_OR_GREATER
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
         }
 
         [Fact]

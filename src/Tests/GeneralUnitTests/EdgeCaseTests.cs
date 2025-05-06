@@ -21,7 +21,9 @@ namespace GeneralUnitTests
         public EdgeCaseTests(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
+#if NETCOREAPP3_1_OR_GREATER
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
         }
         
         #region Exception Tests
@@ -296,7 +298,7 @@ namespace GeneralUnitTests
             
             // Verify instance is created
             Assert.NotNull(exception);
-            Assert.Equal("Exception of type 'KbinXml.Net.KbinException' was thrown.", exception.Message);
+            Assert.Contains("KbinXml.Net.KbinException", exception.Message);
         }
         
         [Fact]

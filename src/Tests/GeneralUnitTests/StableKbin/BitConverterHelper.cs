@@ -38,13 +38,13 @@ namespace StableKbin
         {
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
             return BinaryPrimitivesExt.ReadSingleBigEndian(value);
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             var arr = ReverseArray(value);
             return BitConverter.ToSingle(arr.ToArray(), 0);
 #endif
         }
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
         public static float GetBigEndianSingleWithoutCopy(Span<byte> value)
         {
             var arr = ReverseSourceArrayNonCopy(value);
@@ -112,7 +112,7 @@ namespace StableKbin
             Span<byte> span = new byte[length];
             BinaryPrimitivesExt.WriteSingleBigEndian(span, value);
             return span;
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             return ReverseSourceArrayNonCopy(BitConverter.GetBytes(value));
 #endif
         }
@@ -125,7 +125,7 @@ namespace StableKbin
             return span.ToArray();
         }
 
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
 
         private static Span<byte> ReverseSourceArrayNonCopy(Span<byte> source)
         {
@@ -182,7 +182,7 @@ namespace StableKbin
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
             BinaryPrimitivesExt.WriteSingleBigEndian(span, value);
             return span;
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             return ReverseSourceArrayNonCopy(BitConverter.GetBytes(value));
 #endif
         }

@@ -58,7 +58,7 @@ namespace StableKbin
 
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
             return new string(result);
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             return new string(result.ToArray());
 #endif
         }

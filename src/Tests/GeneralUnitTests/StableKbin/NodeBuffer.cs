@@ -44,7 +44,7 @@ namespace StableKbin
 
 #if NETSTANDARD2_1 || NET5_0_OR_GREATER
             return _encoding.GetString(ReadBytes((length & 0xBF) + 1));
-#elif NETSTANDARD2_0
+#elif NETSTANDARD2_0 || NETFRAMEWORK
             return _encoding.GetString(ReadBytes((length & 0xBF) + 1).ToArray());
 #endif
         }

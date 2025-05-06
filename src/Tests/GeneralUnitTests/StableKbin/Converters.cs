@@ -9,57 +9,57 @@ namespace StableKbin
         public delegate string ByteToStringDelegate(Span<byte> bytes);
 
         public static Span<byte> U8ToBytes(ReadOnlySpan<char> str) => new[] { byte.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ) };
         public static Span<byte> S8ToBytes(ReadOnlySpan<char> str) => new[] { (byte)sbyte.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ) };
         public static Span<byte> U16ToBytes(ReadOnlySpan<char> str) => BitConverterHelper.GetBigEndianBytes(ushort.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> S16ToBytes(ReadOnlySpan<char> str) => BitConverterHelper.GetBigEndianBytes(short.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> U32ToBytes(ReadOnlySpan<char> str) => BitConverterHelper.GetBigEndianBytes(uint.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> S32ToBytes(ReadOnlySpan<char> str) => BitConverterHelper.GetBigEndianBytes(int.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> U64ToBytes(ReadOnlySpan<char> str) => BitConverterHelper.GetBigEndianBytes(ulong.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> S64ToBytes(ReadOnlySpan<char> str) => BitConverterHelper.GetBigEndianBytes(long.Parse(str
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> SingleToBytes(ReadOnlySpan<char> input) => BitConverterHelper.GetBigEndianBytes(float.Parse(input
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> DoubleToBytes(ReadOnlySpan<char> input) => BitConverterHelper.GetBigEndianBytes(double.Parse(input
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ));
         public static Span<byte> Ip4ToBytes(ReadOnlySpan<char> input) => IPAddress.Parse(input
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NETFRAMEWORK
                 .ToString()
 #endif
         ).GetAddressBytes();

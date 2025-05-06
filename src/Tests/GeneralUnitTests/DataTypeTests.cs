@@ -19,7 +19,9 @@ namespace GeneralUnitTests
         public DataTypeTests(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
+#if NETCOREAPP3_1_OR_GREATER
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
         }
 
         #region Numeric Type Tests
@@ -230,7 +232,7 @@ namespace GeneralUnitTests
             
             // Test writing
             var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-            int bytesWritten = U8Converter.Instance.WriteString(ref builder, valueStr);
+            int bytesWritten = U8Converter.Instance.WriteString(ref builder, valueStr.AsSpan());
             
             Assert.Equal(1, bytesWritten);
             
@@ -249,7 +251,7 @@ namespace GeneralUnitTests
             
             // Test writing
             var builder = new ValueListBuilder<byte>(stackalloc byte[8]);
-            int bytesWritten = S32Converter.Instance.WriteString(ref builder, valueStr);
+            int bytesWritten = S32Converter.Instance.WriteString(ref builder, valueStr.AsSpan());
             
             Assert.Equal(4, bytesWritten);
             
@@ -267,7 +269,7 @@ namespace GeneralUnitTests
             
             // Test writing
             var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-            int bytesWritten = Ip4Converter.Instance.WriteString(ref builder, value);
+            int bytesWritten = Ip4Converter.Instance.WriteString(ref builder, value.AsSpan());
             
             Assert.Equal(4, bytesWritten);
             
@@ -310,12 +312,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(ByteTestData))]
         public void ByteTest(byte value)
         {
-            DoWorks(value, x => StableKbin.Converters.U8ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.U8ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.U8ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    U8Converter.Instance.WriteString(ref builder, str);
+                    U8Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => U8Converter.Instance.ToString(bytes));
         }
@@ -324,12 +326,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(SbyteTestData))]
         public void SbyteTest(sbyte value)
         {
-            DoWorks(value, x => StableKbin.Converters.S8ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.S8ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.S8ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    S8Converter.Instance.WriteString(ref builder, str);
+                    S8Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => S8Converter.Instance.ToString(bytes));
         }
@@ -338,12 +340,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(Int16TestData))]
         public void Int16Test(short value)
         {
-            DoWorks(value, x => StableKbin.Converters.S16ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.S16ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.S16ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    S16Converter.Instance.WriteString(ref builder, str);
+                    S16Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => S16Converter.Instance.ToString(bytes));
         }
@@ -352,12 +354,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(Int32TestData))]
         public void Int32Test(int value)
         {
-            DoWorks(value, x => StableKbin.Converters.S32ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.S32ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.S32ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    S32Converter.Instance.WriteString(ref builder, str);
+                    S32Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => S32Converter.Instance.ToString(bytes));
         }
@@ -366,12 +368,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(Int64TestData))]
         public void Int64Test(long value)
         {
-            DoWorks(value, x => StableKbin.Converters.S64ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.S64ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.S64ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    S64Converter.Instance.WriteString(ref builder, str);
+                    S64Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => S64Converter.Instance.ToString(bytes));
         }
@@ -380,12 +382,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(UInt16TestData))]
         public void UInt16Test(ushort value)
         {
-            DoWorks(value, x => StableKbin.Converters.U16ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.U16ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.U16ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    U16Converter.Instance.WriteString(ref builder, str);
+                    U16Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => U16Converter.Instance.ToString(bytes));
         }
@@ -394,12 +396,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(UInt32TestData))]
         public void UInt32Test(uint value)
         {
-            DoWorks(value, x => StableKbin.Converters.U32ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.U32ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.U32ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    U32Converter.Instance.WriteString(ref builder, str);
+                    U32Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => U32Converter.Instance.ToString(bytes));
         }
@@ -408,12 +410,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(UInt64TestData))]
         public void UInt64Test(ulong value)
         {
-            DoWorks(value, x => StableKbin.Converters.U64ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.U64ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.U64ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    U64Converter.Instance.WriteString(ref builder, str);
+                    U64Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => U64Converter.Instance.ToString(bytes));
         }
@@ -422,12 +424,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(SingleTestData))]
         public void SingleTest(float value)
         {
-            DoWorks(value, x => StableKbin.Converters.SingleToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.SingleToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.SingleToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    FloatConverter.Instance.WriteString(ref builder, str);
+                    FloatConverter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => FloatConverter.Instance.ToString(bytes));
         }
@@ -436,12 +438,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(DoubleTestData))]
         public void DoubleTest(double value)
         {
-            DoWorks(value, x => StableKbin.Converters.DoubleToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.DoubleToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.DoubleToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    DoubleConverter.Instance.WriteString(ref builder, str);
+                    DoubleConverter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => DoubleConverter.Instance.ToString(bytes));
         }
@@ -450,12 +452,12 @@ namespace GeneralUnitTests
         [ClassData(typeof(Ip4TestData))]
         public void Ip4Test(string value)
         {
-            DoWorks(value, x => StableKbin.Converters.Ip4ToBytes(x).ToArray(),
+            DoWorks(value, x => StableKbin.Converters.Ip4ToBytes(x.AsSpan()).ToArray(),
                 x => StableKbin.Converters.Ip4ToString(x),
                 str =>
                 {
                     var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
-                    Ip4Converter.Instance.WriteString(ref builder, str);
+                    Ip4Converter.Instance.WriteString(ref builder, str.AsSpan());
                     return builder.AsSpan().ToArray();
                 }, bytes => Ip4Converter.Instance.ToString(bytes));
         }
