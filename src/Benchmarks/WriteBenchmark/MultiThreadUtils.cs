@@ -35,6 +35,11 @@ namespace WriteBenchmark
             }
 
             WaitHandle.WaitAll(events);
+            foreach (var manualResetEvent in events)
+            {
+                manualResetEvent.Dispose();
+            }
+
             return objs;
         }
     }
