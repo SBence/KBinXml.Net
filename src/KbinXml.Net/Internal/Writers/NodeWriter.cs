@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
+using KbinXml.Net.Utils;
 using Microsoft.IO;
 
 namespace KbinXml.Net.Internal.Writers;
@@ -30,7 +32,20 @@ internal readonly ref partial struct NodeWriter
         else
         {
             WriteU8((byte)(value.Length - 1 | 1 << 6));
-            WriteBytes(_encoding.GetBytes(value));
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+            int byteCount = _encoding.GetByteCount(value);
+            var span = Stream.GetSpan(byteCount);
+            int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
+            Stream.Advance(bytesWritten);
+#else
+            int byteCount = _encoding.GetByteCount(value);
+            using (var rentedArray = new RentedArray<byte>(ArrayPool<byte>.Shared, byteCount))
+            {
+                int bytesEncoded = _encoding.GetBytes(value, 0, value.Length, rentedArray.Array, 0);
+                Stream.Write(rentedArray.Array, 0, bytesEncoded);
+            }
+#endif
         }
     }
 

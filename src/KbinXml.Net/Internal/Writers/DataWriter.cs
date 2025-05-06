@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using KbinXml.Net.Utils;
 using Microsoft.IO;
 
 namespace KbinXml.Net.Internal.Writers;
@@ -192,9 +194,14 @@ internal partial struct DataWriter : IKBinWriter, IDisposable
         int bytesWritten = _encoding.GetBytes(value.AsSpan(), span);
         span[bytesWritten] = 0; // 添加结尾的0字节
 #else
-        var bytes = _encoding.GetBytes(value);
-        bytes.CopyTo(span);
-        span[bytes.Length] = 0; // 添加结尾的0字节
+        int bytesWritten = _encoding.GetByteCount(value);
+        using (var rentedArray = new RentedArray<byte>(ArrayPool<byte>.Shared, bytesWritten))
+        {
+            int bytesEncoded = _encoding.GetBytes(value, 0, value.Length, rentedArray.Array, 0);
+            rentedArray.Array.AsSpan(0, bytesEncoded).CopyTo(span);
+        }
+
+        span[bytesWritten] = 0; // 添加结尾的0字节
 #endif
         Stream.Advance(sizeHint);
     }
