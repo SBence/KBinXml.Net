@@ -13,7 +13,7 @@ namespace WriteBenchmark;
 [SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net90)]
 [SimpleJob(RuntimeMoniker.Net48)]
-public class MultiThreadComparison1
+public class MultiThreadComparison
 {
     private byte[] _kbin;
     private byte[] _xmlBytes;
