@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 namespace GeneralUnitTests
 {
     /// <summary>
-    /// Kbin基本功能测试 - 测试KbinConverter的基本读写功能
+    /// Kbin Basic Function Tests - Test the basic read/write functionality of KbinConverter
     /// </summary>
     public class KbinBasicTests
     {
@@ -28,16 +28,16 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadXmlLinq_ValidKbin_ReturnsXDocument()
         {
-            // 准备有效的XML
+            // Prepare valid XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
 
-            // 从Kbin读取XDocument
+            // Read XDocument from Kbin
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(result);
             Assert.NotNull(result.Root);
             Assert.Equal("root", result.Root.Name.ToString());
@@ -49,17 +49,17 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadXmlLinq_WithEncodingOutput_ReturnsEncodingAndXDocument()
         {
-            // 准备有效的XML
+            // Prepare valid XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
 
-            // 从Kbin读取XDocument并获取编码信息
+            // Read XDocument from Kbin and get encoding information
             KnownEncodings encoding;
             var result = KbinConverter.ReadXmlLinq(kbin, out encoding);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(result);
             Assert.Equal(KnownEncodings.UTF8, encoding);
             Assert.Equal("测试", result.Root.Element("value").Value);
@@ -70,20 +70,20 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadXmlBytes_ValidKbin_ReturnsXmlBytes()
         {
-            // 准备有效的XML
+            // Prepare valid XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
 
-            // 从Kbin读取XML字节
+            // Read XML bytes from Kbin
             var xmlBytes = KbinConverter.ReadXmlBytes(kbin);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(xmlBytes);
             Assert.True(xmlBytes.Length > 0);
 
-            // 将字节转换回字符串并验证内容
+            // Convert bytes back to string and verify content
             var resultStr = Encoding.UTF8.GetString(xmlBytes);
             Assert.Contains("<root>", resultStr);
             Assert.Contains("<value", resultStr);
@@ -97,20 +97,20 @@ namespace GeneralUnitTests
         [Fact]
         public void GetXmlStream_ValidKbin_ReturnsMemoryStream()
         {
-            // 准备有效的XML
+            // Prepare valid XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
 
-            // 从Kbin获取MemoryStream
+            // Get MemoryStream from Kbin
             using var stream = KbinConverter.GetXmlStream(kbin);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(stream);
             Assert.True(stream.Length > 0);
 
-            // 读取流并验证内容
+            // Read stream and verify content
             stream.Position = 0;
             using var reader = new StreamReader(stream, Encoding.UTF8, true, -1, true);
             var resultStr = reader.ReadToEnd();
@@ -123,16 +123,16 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadXml_ValidKbin_ReturnsXmlDocument()
         {
-            // 准备有效的XML
+            // Prepare valid XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
 
-            // 从Kbin读取XmlDocument
+            // Read XmlDocument from Kbin
             var result = KbinConverter.ReadXml(kbin);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(result);
             Assert.NotNull(result.DocumentElement);
             Assert.Equal("root", result.DocumentElement.Name);
@@ -149,19 +149,19 @@ namespace GeneralUnitTests
         [Fact]
         public void Write_XmlDocument_ReturnsKbinBytes()
         {
-            // 准备XmlDocument
+            // Prepare XmlDocument
             var doc = new XmlDocument();
             var xml = "<root><value __type=\"str\">测试</value></root>";
             doc.LoadXml(xml);
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(doc, KnownEncodings.UTF8);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(kbin);
             Assert.True(kbin.Length > 0);
 
-            // 验证可以被读回
+            // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
             Assert.Equal("测试", result.Root.Element("value").Value);
 
@@ -171,21 +171,21 @@ namespace GeneralUnitTests
         [Fact]
         public void Write_XContainer_ReturnsKbinBytes()
         {
-            // 准备XDocument
+            // Prepare XDocument
             var doc = new XDocument(
                 new XElement("root",
                     new XElement("value", new XAttribute("__type", "str"), "测试")
                 )
             );
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(doc, KnownEncodings.UTF8);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(kbin);
             Assert.True(kbin.Length > 0);
 
-            // 验证可以被读回
+            // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
             Assert.Equal("测试", result.Root.Element("value").Value);
         }
@@ -193,17 +193,17 @@ namespace GeneralUnitTests
         [Fact]
         public void Write_XmlString_ReturnsKbinBytes()
         {
-            // 准备XML字符串
+            // Prepare XML string
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(kbin);
             Assert.True(kbin.Length > 0);
 
-            // 验证可以被读回
+            // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
             Assert.Equal("测试", result.Root.Element("value").Value);
 
@@ -213,18 +213,18 @@ namespace GeneralUnitTests
         [Fact]
         public void Write_XmlBytes_ReturnsKbinBytes()
         {
-            // 准备XML字节
+            // Prepare XML bytes
             var xmlStr = "<root><value __type=\"str\">测试</value></root>";
             var xmlBytes = Encoding.UTF8.GetBytes(xmlStr);
 
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xmlBytes, KnownEncodings.UTF8);
 
-            // 验证结果
+            // Verify results
             Assert.NotNull(kbin);
             Assert.True(kbin.Length > 0);
 
-            // 验证可以被读回
+            // Verify it can be read back
             var result = KbinConverter.ReadXmlLinq(kbin);
             Assert.Equal("测试", result.Root.Element("value").Value);
 
@@ -238,14 +238,14 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadWriteSimple_PreservesContent()
         {
-            // 准备简单XML
+            // Prepare simple XML
             var xml = "<root><value __type=\"str\">Simple Test</value><version __type=\"str\">1.0</version></root>";
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证内容一致性
+            // Verify content consistency
             Assert.Equal("Simple Test", result.Root.Element("value").Value);
             Assert.Equal("1.0", result.Root.Element("version").Value);
 
@@ -255,14 +255,14 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadWriteWithAttributes_PreservesAttributes()
         {
-            // 准备带属性的XML
+            // Prepare XML with attributes
             var xml = "<root><item __type=\"str\" enabled=\"true\" id=\"1\" name=\"测试项\">带属性的项目</item></root>";
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证属性一致性
+            // Verify attribute consistency
             var itemElement = result.Root.Element("item");
             Assert.Equal("1", itemElement.Attribute("id").Value);
             Assert.Equal("测试项", itemElement.Attribute("name").Value);
@@ -276,7 +276,7 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadWriteNestedElements_PreservesStructure()
         {
-            // 准备嵌套XML
+            // Prepare nested XML
             var xml = @"
             <root>
                 <parent>
@@ -288,11 +288,11 @@ namespace GeneralUnitTests
                 </parent>
             </root>";
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证嵌套结构一致性
+            // Verify nested structure consistency
             var parentElement = result.Root.Element("parent");
             Assert.Equal("值1", parentElement.Element("child1").Value);
             Assert.Equal("值2", parentElement.Element("child2").Value);
@@ -305,7 +305,7 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadWriteElementArray_PreservesArray()
         {
-            // 准备数组XML
+            // Prepare array XML
             var xml = @"
             <root>
                 <items>
@@ -315,11 +315,11 @@ namespace GeneralUnitTests
                 </items>
             </root>";
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证数组一致性
+            // Verify array consistency
             var itemElements = result.Root.Element("items").Elements("item").ToList();
             Assert.Equal(3, itemElements.Count);
             Assert.Equal("第一项", itemElements[0].Value);
@@ -333,7 +333,7 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadWriteWithAttributesAndElements_PreservesAll()
         {
-            // 准备复杂XML（混合属性和元素）
+            // Prepare complex XML (mixed attributes and elements)
             var xml = @"
             <config version=""1.0"">
                 <server id=""main"" port=""8080"">
@@ -345,11 +345,11 @@ namespace GeneralUnitTests
                 </server>
             </config>";
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证复杂结构一致性
+            // Verify complex structure consistency
             Assert.Equal("1.0", result.Root.Attribute("version").Value);
 
             var serverElement = result.Root.Element("server");
@@ -375,21 +375,21 @@ namespace GeneralUnitTests
         [Fact]
         public void WriteOptions_CustomPrefix_HandlesCorrectly()
         {
-            // 准备XML
+            // Prepare XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
 
-            // 准备自定义前缀的WriteOptions
+            // Prepare custom prefix WriteOptions
             var options = new WriteOptions
             {
                 Compress = true,
                 RepairedPrefix = "custom_"
             };
 
-            // 使用自定义前缀转换
+            // Use custom prefix to convert
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8, options);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证值正确
+            // Verify value correctness
             Assert.Equal("测试", result.Root.Element("value").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
@@ -402,7 +402,7 @@ namespace GeneralUnitTests
         [InlineData(KnownEncodings.UTF8)]
         public void ReadWrite_DifferentEncodings_PreservesData(KnownEncodings encoding)
         {
-            // 准备适合当前编码的测试文本
+            // Prepare test text suitable for current encoding
             string testText;
             switch (encoding)
             {
@@ -423,14 +423,14 @@ namespace GeneralUnitTests
                     break;
             }
 
-            // 准备XML
+            // Prepare XML
             var xml = $"<root><value __type=\"str\">{testText}</value></root>";
 
-            // 转换为Kbin再返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, encoding);
             var resultDoc = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证文本和结构保留
+            // Verify text and structure preservation
             Assert.Equal(testText, resultDoc.Root.Element("value").Value);
 
             Assert.Equal(xml, resultDoc.ToString(SaveOptions.DisableFormatting));
@@ -456,11 +456,11 @@ namespace GeneralUnitTests
                     </confuse__a3>
                     """;
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证内容一致性 - 我们验证特定的值和结构
+            // Verify content consistency - we verify specific values and structure
             var confuseElements = result.Root.Elements("confuse__a4").ToList();
             Assert.Equal(2, confuseElements.Count);
 
@@ -494,11 +494,11 @@ namespace GeneralUnitTests
                     </card>
                     """;
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.ShiftJIS);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证日文文本正确转换
+            // Verify Japanese text correctly converted
             Assert.Equal("ap_06_R0002", result.Root.Element("info").Element("texture").Value);
             Assert.Equal("ボルテ10周年★記念限定カード", result.Root.Element("info").Element("title").Value);
             Assert.Equal("はわわ～！ボルテはついニ[br:0]10周年を迎えまシタ～♪", result.Root.Element("info").Element("message_a").Value);
@@ -518,15 +518,15 @@ namespace GeneralUnitTests
                     </kingdom>
                     """;
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证二进制数据正确转换
+            // Verify binary data correctly converted
             Assert.Equal("f34255041131eddfc769181b8f33892e", result.Root.Element("cf").Value);
             Assert.Equal("aa4a965aa8c2c169d145e75b5da93879cd8ad1a3f32185662dc54341263dbb03", result.Root.Element("qcf").Value);
 
-            // 验证大小属性保留
+            // Verify size attribute preservation
             Assert.Equal("16", result.Root.Element("cf").Attribute("__size").Value);
             Assert.Equal("32", result.Root.Element("qcf").Attribute("__size").Value);
 
@@ -573,11 +573,11 @@ namespace GeneralUnitTests
                     </kingdom>
                     """;
 
-            // 转换为Kbin并读回
+            // Convert to Kbin and read back
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
 
-            // 验证空节点结构保留
+            // Verify empty node structure preservation
             Assert.NotNull(result.Root.Element("test"));
             Assert.NotNull(result.Root.Element("test").Element("haha"));
             Assert.Equal(string.Empty, result.Root.Element("test").Element("haha").Value);

@@ -12,7 +12,7 @@ using Xunit.Abstractions;
 namespace GeneralUnitTests
 {
     /// <summary>
-    /// 边界情况测试 - 测试异常处理和边界条件
+    /// Edge Case Tests - Testing exception handling and boundary conditions
     /// </summary>
     public class EdgeCaseTests
     {
@@ -29,43 +29,43 @@ namespace GeneralUnitTests
         [Fact]
         public void ReadXmlLinq_InvalidKbin_ThrowsKbinException()
         {
-            // 准备无效的Kbin数据
-            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // 非Kbin格式的字节数组
+            // Prepare invalid Kbin data
+            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // Non-Kbin format byte array
             
-            // 验证抛出异常
+            // Verify exception is thrown
             Assert.Throws<KbinException>(() => KbinConverter.ReadXmlLinq(invalidKbin));
         }
         
         [Fact]
         public void Write_InvalidEncoding_ThrowsArgumentOutOfRangeException()
         {
-            // 准备有效的XML
+            // Prepare valid XML
             var xml = "<root><value __type=\"str\">测试</value></root>";
             
-            // 将XML字符串转换为XmlDocument
+            // Convert XML string to XmlDocument
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xml);
             
-            // 使用无效的编码尝试转换
+            // Try converting with invalid encoding
             Assert.Throws<ArgumentOutOfRangeException>(() => KbinConverter.Write(xmlDoc, (KnownEncodings)999));
         }
         
         [Fact]
         public void Write_NullXml_ThrowsArgumentNullException()
         {
-            // 使用null XML尝试转换
+            // Try converting with null XML
             string xml = null;
             var stringException = Assert.Throws<ArgumentNullException>(() => KbinConverter.Write(xml, KnownEncodings.UTF8));
             Assert.IsType<ArgumentNullException>(stringException);
             Assert.Contains("xml", stringException.ParamName, StringComparison.OrdinalIgnoreCase);
             
-            // 使用null XmlDocument尝试转换
+            // Try converting with null XmlDocument
             XmlDocument xmlDoc = null;
             var docException = Assert.Throws<ArgumentNullException>(() => KbinConverter.Write(xmlDoc, KnownEncodings.UTF8));
             Assert.IsType<ArgumentNullException>(docException);
             Assert.Contains("xml", docException.ParamName, StringComparison.OrdinalIgnoreCase);
             
-            // 使用null XContainer尝试转换
+            // Try converting with null XContainer
             XContainer xContainer = null;
             var containerException = Assert.Throws<ArgumentNullException>(() => KbinConverter.Write(xContainer, KnownEncodings.UTF8));
             Assert.IsType<ArgumentNullException>(containerException);
@@ -75,40 +75,40 @@ namespace GeneralUnitTests
         [Fact]
         public void Write_InvalidXmlString_ThrowsXmlException()
         {
-            // 准备无效的XML字符串（缺少关闭标签）
+            // Prepare invalid XML string (missing closing tag)
             var invalidXml = "<root><value __type=\"str\">测试</value>";
             
-            // 验证抛出异常
+            // Verify exception is thrown
             Assert.Throws<XmlException>(() => KbinConverter.Write(invalidXml, KnownEncodings.UTF8));
         }
         
         [Fact]
         public void ReadXmlBytes_InvalidKbin_ThrowsKbinException()
         {
-            // 准备无效的Kbin数据
-            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // 非Kbin格式的字节数组
+            // Prepare invalid Kbin data
+            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // Non-Kbin format byte array
             
-            // 验证抛出异常
+            // Verify exception is thrown
             Assert.Throws<KbinException>(() => KbinConverter.ReadXmlBytes(invalidKbin));
         }
         
         [Fact]
         public void GetXmlStream_InvalidKbin_ThrowsKbinException()
         {
-            // 准备无效的Kbin数据
-            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // 非Kbin格式的字节数组
+            // Prepare invalid Kbin data
+            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // Non-Kbin format byte array
             
-            // 验证抛出异常
+            // Verify exception is thrown
             Assert.Throws<KbinException>(() => KbinConverter.GetXmlStream(invalidKbin));
         }
         
         [Fact]
         public void ReadXml_InvalidKbin_ThrowsKbinException()
         {
-            // 准备无效的Kbin数据
-            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // 非Kbin格式的字节数组
+            // Prepare invalid Kbin data
+            var invalidKbin = new byte[] { 0x42, 0x43, 0x44, 0x45 }; // Non-Kbin format byte array
             
-            // 验证抛出异常
+            // Verify exception is thrown
             Assert.Throws<KbinException>(() => KbinConverter.ReadXml(invalidKbin));
         }
         
@@ -119,14 +119,14 @@ namespace GeneralUnitTests
         [Fact]
         public void EmptyXml_CanConvert()
         {
-            // 准备空XML
+            // Prepare empty XML
             var xml = "<root></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证空XML正确转换
+            // Verify empty XML correctly converted
             Assert.NotNull(result);
             Assert.NotNull(result.Root);
             Assert.Equal("root", result.Root.Name);
@@ -136,7 +136,7 @@ namespace GeneralUnitTests
         [Fact]
         public void LargeXml_CanConvert()
         {
-            // 生成大型XML
+            // Generate large XML
             var largeXmlBuilder = new StringBuilder();
             largeXmlBuilder.Append("<root>");
             
@@ -149,16 +149,16 @@ namespace GeneralUnitTests
             
             var largeXml = largeXmlBuilder.ToString();
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(largeXml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证大型XML正确转换
+            // Verify large XML correctly converted
             Assert.NotNull(result);
             Assert.NotNull(result.Root);
             Assert.Equal(1000, result.Root.Elements("item").Count());
             
-            // 检查某些特定元素的值
+            // Check some specific element values
             var items = result.Root.Elements("item").ToList();
             var item0 = items.FirstOrDefault(e => e.Attribute("id")?.Value == "0");
             var item999 = items.FirstOrDefault(e => e.Attribute("id")?.Value == "999");
@@ -172,26 +172,26 @@ namespace GeneralUnitTests
         [Fact]
         public void DeepNestedXml_CanConvert()
         {
-            // 生成深度嵌套的XML
+            // Generate deeply nested XML
             var deepXmlBuilder = new StringBuilder();
             deepXmlBuilder.Append("<root>");
             
             string currentTag = "<level1>";
             deepXmlBuilder.Append(currentTag);
             
-            // 创建20层深度的XML
+            // Create 20 levels deep XML
             for (int i = 2; i <= 19; i++)
             {
                 currentTag = $"<level{i}>";
                 deepXmlBuilder.Append(currentTag);
             }
             
-            // 最内层添加__type属性
+            // Add __type attribute to innermost level
             deepXmlBuilder.Append("<level20 __type=\"str\">");
             deepXmlBuilder.Append("最深处");
             deepXmlBuilder.Append("</level20>");
             
-            // 关闭所有标签
+            // Close all tags
             for (int i = 19; i >= 1; i--)
             {
                 deepXmlBuilder.Append($"</level{i}>");
@@ -201,15 +201,15 @@ namespace GeneralUnitTests
             
             var deepXml = deepXmlBuilder.ToString();
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(deepXml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证深度嵌套XML正确转换
+            // Verify deeply nested XML correctly converted
             Assert.NotNull(result);
             Assert.NotNull(result.Root);
             
-            // 导航到最深层并检查值
+            // Navigate to deepest level and check value
             var element = result.Root.Element("level1");
             for (int i = 2; i <= 20; i++)
             {
@@ -223,21 +223,21 @@ namespace GeneralUnitTests
         [Fact]
         public void XmlWithSpecialChars_CanConvert()
         {
-            // 准备包含特殊字符的XML
+            // Prepare XML with special characters
             var xml = "<root><value __type=\"str\">特殊字符: &lt;&gt;&amp;&quot;&apos;</value></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证包含特殊字符的XML正确转换
+            // Verify XML with special characters correctly converted
             Assert.Equal("特殊字符: <>&\"'", result.Root.Element("value").Value);
         }
         
         [Fact]
         public void MaxSizeArrays_CanConvert()
         {
-            // 生成一个包含大量元素的数组
+            // Generate an array with a large number of elements
             var arrayBuilder = new StringBuilder();
             arrayBuilder.Append("<root><array __type=\"u8\" __count=\"1000\">");
             
@@ -251,17 +251,17 @@ namespace GeneralUnitTests
             
             var arrayXml = arrayBuilder.ToString();
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(arrayXml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证数组信息正确
+            // Verify array information correctly
             var array = result.Root.Element("array");
             Assert.NotNull(array);
             Assert.Equal("u8", array.Attribute("__type").Value);
             Assert.Equal("1000", array.Attribute("__count").Value);
             
-            // 验证数组内容
+            // Verify array content
             var values = array.Value.Split(' ');
             Assert.Equal(1000, values.Length);
         }
@@ -269,14 +269,14 @@ namespace GeneralUnitTests
         [Fact]
         public void ZeroLengthData_CanConvert()
         {
-            // 准备包含零长度数据的XML
+            // Prepare XML with zero length data
             var xml = "<root><bin __type=\"bin\" __size=\"0\"></bin></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证零长度数据正确转换
+            // Verify zero length data correctly converted
             var bin = result.Root.Element("bin");
             Assert.NotNull(bin);
             Assert.Equal("bin", bin.Attribute("__type").Value);
@@ -291,10 +291,10 @@ namespace GeneralUnitTests
         [Fact]
         public void KbinException_DefaultConstructor_CreatesInstance()
         {
-            // 调用默认构造函数
+            // Call default constructor
             var exception = new KbinException();
             
-            // 验证实例已创建
+            // Verify instance is created
             Assert.NotNull(exception);
             Assert.Equal("Exception of type 'KbinXml.Net.KbinException' was thrown.", exception.Message);
         }
@@ -302,27 +302,27 @@ namespace GeneralUnitTests
         [Fact]
         public void KbinException_MessageConstructor_SetsMessage()
         {
-            // 预期的错误消息
+            // Expected error message
             const string expectedMessage = "测试错误消息";
             
-            // 使用消息构造异常
+            // Use message constructor to create exception
             var exception = new KbinException(expectedMessage);
             
-            // 验证消息已正确设置
+            // Verify message is correctly set
             Assert.Equal(expectedMessage, exception.Message);
         }
         
         [Fact]
         public void KbinException_InnerExceptionConstructor_SetsMessageAndInnerException()
         {
-            // 准备内部异常和消息
+            // Prepare inner exception and message
             const string expectedMessage = "外部异常消息";
             var innerException = new InvalidOperationException("内部异常消息");
             
-            // 使用消息和内部异常构造异常
+            // Use message and inner exception constructor to create exception
             var exception = new KbinException(expectedMessage, innerException);
             
-            // 验证消息和内部异常已正确设置
+            // Verify message and inner exception are correctly set
             Assert.Equal(expectedMessage, exception.Message);
             Assert.Same(innerException, exception.InnerException);
         }
@@ -330,33 +330,33 @@ namespace GeneralUnitTests
         [Fact]
         public void KbinException_DerivesFromException()
         {
-            // 创建异常实例
+            // Create exception instance
             var exception = new KbinException();
             
-            // 验证继承自Exception
+            // Verify inherits from Exception
             Assert.IsAssignableFrom<Exception>(exception);
         }
         
         [Fact]
         public void KbinTypeNotFoundException_DerivesFromKbinException()
         {
-            // 创建类型未找到异常
+            // Create type not found exception
             var typeException = new KbinTypeNotFoundException("test");
             
-            // 验证继承自KbinException
+            // Verify inherits from KbinException
             Assert.IsAssignableFrom<KbinException>(typeException);
         }
 
         [Fact]
         public void KbinTypeNotFoundException_IncludesTypeNameInMessage()
         {
-            // 测试类型名
+            // Test type name
             const string typeName = "invalidType";
             
-            // 创建异常
+            // Create exception
             var exception = new KbinTypeNotFoundException(typeName);
             
-            // 验证类型名包含在消息中
+            // Verify type name is included in message
             Assert.Contains(typeName, exception.Message);
         }
         

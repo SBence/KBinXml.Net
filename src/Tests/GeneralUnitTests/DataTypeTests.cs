@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 namespace GeneralUnitTests
 {
     /// <summary>
-    /// 数据类型测试 - 测试各种数据类型的转换
+    /// Data Type Tests - Test conversion of various data types
     /// </summary>
     public class DataTypeTests
     {
@@ -98,17 +98,17 @@ namespace GeneralUnitTests
 
         private void TestNumericTypeConversion(string type, string value)
         {
-            // 准备XML
+            // Prepare XML
             var xml = $"<root><value __type=\"{type}\">{value}</value></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证值未改变
+            // Verify value is unchanged
             Assert.Equal(value, result.Root.Element("value").Value);
             
-            // 验证类型属性保留
+            // Verify type attribute is preserved
             Assert.Equal(type, result.Root.Element("value").Attribute("__type").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
@@ -125,17 +125,17 @@ namespace GeneralUnitTests
         [InlineData("")]
         public void StringType_ConversionIsCorrect(string value)
         {
-            // 准备XML
+            // Prepare XML
             var xml = $"<root><value __type=\"str\">{value}</value></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证值未改变
+            // Verify value is unchanged
             Assert.Equal(value, result.Root.Element("value").Value);
             
-            // 验证类型属性保留
+            // Verify type attribute is preserved
             Assert.Equal("str", result.Root.Element("value").Attribute("__type").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
@@ -151,17 +151,17 @@ namespace GeneralUnitTests
         [InlineData("", 0)]
         public void BinaryType_ConversionIsCorrect(string hexValue, int size)
         {
-            // 准备XML
+            // Prepare XML
             var xml = $"<root><value __type=\"bin\" __size=\"{size}\">{hexValue}</value></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证值未改变（忽略大小写）
+            // Verify value is unchanged (ignoring case)
             Assert.Equal(hexValue.ToUpperInvariant(), result.Root.Element("value").Value.ToUpperInvariant());
             
-            // 验证类型属性和大小属性保留
+            // Verify type attribute and size attribute are preserved
             Assert.Equal("bin", result.Root.Element("value").Attribute("__type").Value);
             Assert.Equal(size.ToString(), result.Root.Element("value").Attribute("__size").Value);
 
@@ -178,17 +178,17 @@ namespace GeneralUnitTests
         [InlineData("s32", "-2147483648 0 2147483647", 3)]
         public void ArrayType_ConversionIsCorrect(string type, string values, int count)
         {
-            // 准备XML
+            // Prepare XML
             var xml = $"<root><array __type=\"{type}\" __count=\"{count}\">{values}</array></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证值未改变
+            // Verify value is unchanged
             Assert.Equal(values, result.Root.Element("array").Value);
             
-            // 验证类型属性和数量属性保留
+            // Verify type attribute and count attribute are preserved
             Assert.Equal(type, result.Root.Element("array").Attribute("__type").Value);
             Assert.Equal(count.ToString(), result.Root.Element("array").Attribute("__count").Value);
 
@@ -202,17 +202,17 @@ namespace GeneralUnitTests
         [Fact]
         public void Ip4Type_ConversionIsCorrect()
         {
-            // 准备XML
+            // Prepare XML
             var xml = "<root><ip __type=\"ip4\">192.168.1.1</ip></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证值未改变
+            // Verify value is unchanged
             Assert.Equal("192.168.1.1", result.Root.Element("ip").Value);
             
-            // 验证类型属性保留
+            // Verify type attribute is preserved
             Assert.Equal("ip4", result.Root.Element("ip").Attribute("__type").Value);
 
             Assert.Equal(xml, result.ToString(SaveOptions.DisableFormatting));
@@ -228,13 +228,13 @@ namespace GeneralUnitTests
             byte value = 123;
             string valueStr = value.ToString();
             
-            // 测试写入
+            // Test writing
             var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
             int bytesWritten = U8Converter.Instance.WriteString(ref builder, valueStr);
             
             Assert.Equal(1, bytesWritten);
             
-            // 测试读取
+            // Test reading
             var bytes = builder.AsSpan().ToArray();
             string result = U8Converter.Instance.ToString(bytes);
             
@@ -247,13 +247,13 @@ namespace GeneralUnitTests
             int value = 123456789;
             string valueStr = value.ToString();
             
-            // 测试写入
+            // Test writing
             var builder = new ValueListBuilder<byte>(stackalloc byte[8]);
             int bytesWritten = S32Converter.Instance.WriteString(ref builder, valueStr);
             
             Assert.Equal(4, bytesWritten);
             
-            // 测试读取
+            // Test reading
             var bytes = builder.AsSpan().ToArray();
             string result = S32Converter.Instance.ToString(bytes);
             
@@ -265,13 +265,13 @@ namespace GeneralUnitTests
         {
             string value = "192.168.1.1";
             
-            // 测试写入
+            // Test writing
             var builder = new ValueListBuilder<byte>(stackalloc byte[4]);
             int bytesWritten = Ip4Converter.Instance.WriteString(ref builder, value);
             
             Assert.Equal(4, bytesWritten);
             
-            // 测试读取
+            // Test reading
             var bytes = builder.AsSpan().ToArray();
             string result = Ip4Converter.Instance.ToString(bytes);
             
@@ -285,20 +285,20 @@ namespace GeneralUnitTests
         [Fact]
         public void InvalidValue_ThrowsException()
         {
-            // 准备无效值的XML（超出类型范围）
+            // Prepare invalid value XML (out of type range)
             var xml = "<root><value __type=\"u8\">256</value></root>";
             
-            // 验证抛出异常
+            // Verify throws exception
             Assert.Throws<KbinException>(() => KbinConverter.Write(xml, KnownEncodings.UTF8));
         }
         
         [Fact]
         public void InvalidType_ThrowsException()
         {
-            // 准备无效类型的XML
+            // Prepare invalid type XML
             var xml = "<root><value __type=\"invalid_type\">123</value></root>";
             
-            // 验证抛出异常
+            // Verify throws exception
             Assert.Throws<KbinTypeNotFoundException>(() => KbinConverter.Write(xml, KnownEncodings.UTF8));
         }
 

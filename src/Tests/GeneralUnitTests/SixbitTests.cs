@@ -22,7 +22,7 @@ namespace GeneralUnitTests
             Span<byte> outputSuperOptimized = new byte[testData.Length * 6 / 8];
             Span<byte> outputCoreClrOptimized = new byte[testData.Length * 6 / 8];
 
-            // 执行两个版本
+            // Execute both versions
             SixbitHelperOriginal.Encode(testData, outputOriginal);
             SixbitHelperOptimized.Encode(testData, outputOptimized);
             SixbitHelperSuperOptimized.Encode(testData, outputSuperOptimized);
@@ -52,7 +52,7 @@ namespace GeneralUnitTests
             Span<byte> inputCoreClrOptimized = new byte[output.Length * 8 / 6];
 
 
-            // 执行两个版本
+            // Execute both versions
             SixbitHelperOriginal.Decode(output, inputOriginal);
             SixbitHelperOptimized.Decode(output, inputOptimized);
             SixbitHelperSuperOptimized.Decode(output, inputSuperOptimized);

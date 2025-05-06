@@ -9,7 +9,7 @@ using System.Xml;
 namespace GeneralUnitTests
 {
     /// <summary>
-    /// 编码测试 - 测试不同编码方案的处理
+    /// Encoding Tests - Test handling of different encoding schemes
     /// </summary>
     public class EncodingTests
     {
@@ -28,7 +28,7 @@ namespace GeneralUnitTests
         [InlineData(KnownEncodings.ASCII)]
         public void ReadWrite_DifferentEncodings_PreservesData(KnownEncodings encodingType)
         {
-            // 准备测试文本 - 根据编码选择合适的文本
+            // Prepare test text - select appropriate text based on encoding
             string testText;
             
             switch (encodingType)
@@ -50,35 +50,35 @@ namespace GeneralUnitTests
                     break;
             }
             
-            // 准备XML，添加__type属性
+            // Prepare XML, add __type attribute
             var xml = $"<root><value __type=\"str\">{testText}</value></root>";
             
-            // 转换为Kbin并返回
+            // Convert to Kbin and return
             var kbin = KbinConverter.Write(xml, encodingType);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证文本保留不变
+            // Verify text is preserved unchanged
             Assert.Equal(testText, result.Root.Element("value").Value);
         }
         
         [Fact]
         public void ReadWithEncodingOutput_ReturnsCorrectEncoding()
         {
-            // 准备不同编码的Kbin数据，添加__type属性
+            // Prepare Kbin data with different encodings, add __type attribute
             var utf8Xml = "<root><value __type=\"str\">UTF-8测试</value></root>";
             var utf8Kbin = KbinConverter.Write(utf8Xml, KnownEncodings.UTF8);
             
             var sjisXml = "<root><value __type=\"str\">SJIS测试</value></root>";
             var sjisKbin = KbinConverter.Write(sjisXml, KnownEncodings.ShiftJIS);
             
-            // 测试从Kbin数据读取编码
+            // Test reading encoding from Kbin data
             KnownEncodings detectedUtf8Encoding;
             var utf8Doc = KbinConverter.ReadXmlLinq(utf8Kbin, out detectedUtf8Encoding);
             
             KnownEncodings detectedSjisEncoding;
             var sjisDoc = KbinConverter.ReadXmlLinq(sjisKbin, out detectedSjisEncoding);
             
-            // 验证检测到的编码正确
+            // Verify detected encoding is correct
             Assert.Equal(KnownEncodings.UTF8, detectedUtf8Encoding);
             Assert.Equal(KnownEncodings.ShiftJIS, detectedSjisEncoding);
         }
@@ -86,15 +86,15 @@ namespace GeneralUnitTests
         [Fact]
         public void WriteWithDifferentEncoding_ChangesKbinData()
         {
-            // 准备相同的XML，添加__type属性
+            // Prepare the same XML, add __type attribute
             var xml = "<root><value __type=\"str\">编码测试</value></root>";
             
-            // 使用不同编码转换
+            // Convert using different encodings
             var utf8Kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             var sjisKbin = KbinConverter.Write(xml, KnownEncodings.ShiftJIS);
             var eucjpKbin = KbinConverter.Write(xml, KnownEncodings.EUC_JP);
             
-            // 验证不同编码产生不同的Kbin数据
+            // Verify different encodings produce different Kbin data
             Assert.NotEqual(utf8Kbin, sjisKbin);
             Assert.NotEqual(utf8Kbin, eucjpKbin);
             Assert.NotEqual(sjisKbin, eucjpKbin);
@@ -103,17 +103,17 @@ namespace GeneralUnitTests
         [Fact]
         public void InvalidEncoding_ThrowsException()
         {
-            // 准备XML，添加__type属性
+            // Prepare XML, add __type attribute
             var xml = "<root><value __type=\"str\">测试</value></root>";
             
-            // 测试无效编码
+            // Test invalid encoding
             Assert.Throws<ArgumentOutOfRangeException>(() => KbinConverter.Write(xml, (KnownEncodings)999));
         }
         
         [Fact]
         public void AllEncodings_CanReadWrite()
         {
-            // 获取所有支持的编码
+            // Get all supported encodings
             var encodings = new[]
             {
                 KnownEncodings.ASCII,
@@ -125,7 +125,7 @@ namespace GeneralUnitTests
             
             foreach (var encoding in encodings)
             {
-                // 准备适合当前编码的XML，添加__type属性
+                // Prepare XML suitable for current encoding, add __type attribute
                 string testText;
                 if (encoding == KnownEncodings.ASCII)
                 {
@@ -140,19 +140,19 @@ namespace GeneralUnitTests
                 
                 try
                 {
-                    // 测试转换
+                    // Test conversion
                     var kbin = KbinConverter.Write(xml, encoding);
                     KnownEncodings detectedEncoding;
                     var result = KbinConverter.ReadXmlLinq(kbin, out detectedEncoding);
                     
-                    // 验证文本和编码正确
+                    // Verify text and encoding are correct
                     Assert.Equal(testText, result.Root.Element("value").Value);
                     Assert.Equal(encoding, detectedEncoding);
                 }
                 catch (Exception ex)
                 {
-                    _outputHelper.WriteLine($"编码 {encoding} 测试失败: {ex.Message}");
-                    // 某些编码可能无法处理特定字符，我们跳过这些异常
+                    _outputHelper.WriteLine($"Encoding {encoding} test failed: {ex.Message}");
+                    // Some encodings may not handle certain characters, we skip these exceptions
                     continue;
                 }
             }
@@ -161,25 +161,25 @@ namespace GeneralUnitTests
         [Fact]
         public void WriteOptions_CustomOptions_HandlesCorrectly()
         {
-            // 准备XML，添加__type属性
+            // Prepare XML, add __type attribute
             var xml = "<root><value __type=\"str\">テスト</value></root>";
             
-            // 将XML字符串转换为XmlDocument
+            // Convert XML string to XmlDocument
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xml);
             
-            // 准备不同配置的WriteOptions
+            // Prepare WriteOptions with different configurations
             var options1 = new WriteOptions();
             var options2 = new WriteOptions();
             
-            // 使用不同选项转换
+            // Convert using different options
             var kbin1 = KbinConverter.Write(xmlDoc, KnownEncodings.UTF8, options1);
             var kbin2 = KbinConverter.Write(xmlDoc, KnownEncodings.ShiftJIS, options2);
             
-            // 验证不同选项产生不同的Kbin数据
+            // Verify different options produce different Kbin data
             Assert.NotEqual(kbin1, kbin2);
             
-            // 但都能正常读取
+            // But both can be read normally
             var result1 = KbinConverter.ReadXmlLinq(kbin1);
             var result2 = KbinConverter.ReadXmlLinq(kbin2);
             
@@ -190,40 +190,40 @@ namespace GeneralUnitTests
         [Fact]
         public void WriteOptions_CustomSettings_HandlesCorrectly()
         {
-            // 准备XML，添加__type属性
+            // Prepare XML, add __type attribute
             var xml = "<root><value __type=\"str\">测试</value></root>";
             
-            // 将XML字符串转换为XmlDocument
+            // Convert XML string to XmlDocument
             var xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xml);
             
-            // 准备带有自定义设置的WriteOptions
+            // Prepare WriteOptions with custom settings
             var options = new WriteOptions 
             { 
                 Compress = false
             };
             
-            // 使用自定义选项转换
+            // Convert using custom options
             var kbin = KbinConverter.Write(xmlDoc, KnownEncodings.UTF8, options);
             var result = KbinConverter.ReadXmlLinq(kbin);
             
-            // 验证数据正常读取
+            // Verify data is read normally
             Assert.Equal("测试", result.Root.Element("value").Value);
         }
         
         [Fact]
         public void ReadXmlBytes_ValidKbin_ReturnsXmlBytes()
         {
-            // 准备XML，添加__type属性
+            // Prepare XML, add __type attribute
             var xml = "<root><value __type=\"str\">测试</value></root>";
             
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             
-            // 从Kbin读取XML字节
+            // Read XML bytes from Kbin
             var xmlBytes = KbinConverter.ReadXmlBytes(kbin);
             
-            // 验证XML字节包含预期内容
+            // Verify XML bytes contain expected content
             var resultString = Encoding.UTF8.GetString(xmlBytes);
             Assert.Contains("<root>", resultString);
             Assert.Contains("<value", resultString);
@@ -234,16 +234,16 @@ namespace GeneralUnitTests
         [Fact]
         public void GetXmlStream_ValidKbin_ReturnsMemoryStream()
         {
-            // 准备XML，添加__type属性
+            // Prepare XML, add __type attribute
             var xml = "<root><value __type=\"str\">测试</value></root>";
             
-            // 转换为Kbin
+            // Convert to Kbin
             var kbin = KbinConverter.Write(xml, KnownEncodings.UTF8);
             
-            // 从Kbin获取XML流
+            // Get XML stream from Kbin
             using var stream = KbinConverter.GetXmlStream(kbin);
             
-            // 验证流包含预期内容
+            // Verify stream contains expected content
             using var reader = new System.IO.StreamReader(stream, Encoding.UTF8, true, -1, true);
             var resultString = reader.ReadToEnd();
             Assert.Contains("<root>", resultString);
