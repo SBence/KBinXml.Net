@@ -1,4 +1,4 @@
-﻿extern alias old;
+﻿extern alias kbin1_1;
 
 using System.IO;
 using System.Text;
@@ -52,7 +52,7 @@ public class SingleThreadComparisonBetweenLibsTask
     [Benchmark]
     public object? WriteLinq_NKZsmos_v1_1()
     {
-        return old::KbinXml.Net.KbinConverter.Write(_linq, old::KbinXml.Net.KnownEncodings.UTF8);
+        return kbin1_1::KbinXml.Net.KbinConverter.Write(_linq, kbin1_1::KbinXml.Net.KnownEncodings.UTF8);
     }
 
     [Benchmark]

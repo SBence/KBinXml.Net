@@ -1,4 +1,4 @@
-﻿extern alias old;
+﻿extern alias kbin1_1;
 
 using System.IO;
 using System.Xml;
@@ -51,7 +51,7 @@ public class SingleThreadComparisonBetweenLibsTask
     [Benchmark]
     public object? ReadLinq_NKZsmos_v1_1()
     {
-        return old::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
+        return kbin1_1::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
     }
 
     [Benchmark]

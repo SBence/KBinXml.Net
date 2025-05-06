@@ -27,8 +27,10 @@ jobs:
     - name: run benchmark
       shell: pwsh
       run: |
+        dotnet restore ./src/KbinXml.Net.sln
+        dotnet build ./src/KbinXml.Net.sln --no-restore --configuration Release
         cd ./src/Benchmarks
-        mkdir results -Force 
+        mkdir results -Force
         ./ReadBenchmark-MultiThreadComparisonBetweenLibsTask.ps1
         ./ReadBenchmark-SingleThreadComparisonBetweenLibsTask.ps1
         ./ReadBenchmark-MultiThreadComparison.ps1

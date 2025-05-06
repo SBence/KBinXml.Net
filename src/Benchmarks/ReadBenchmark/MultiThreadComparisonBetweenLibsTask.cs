@@ -1,4 +1,4 @@
-﻿extern alias old;
+﻿extern alias kbin1_1;
 
 using System.IO;
 using System.Xml;
@@ -56,7 +56,7 @@ public class MultiThreadComparisonBetweenLibsTask
     {
         return MultiThreadUtils.DoMultiThreadWork(_ =>
         {
-            return old::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
+            return kbin1_1::KbinXml.Net.KbinConverter.ReadXmlLinq(_kbin);
         }, 32, 5);
     }
 
